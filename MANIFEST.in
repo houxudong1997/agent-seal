@@ -1,0 +1,29 @@
+# MANIFEST.in — controls what goes into the source distribution (sdist)
+# https://packaging.python.org/en/latest/guides/using-manifest-in/
+
+# ============================================================
+# Include: extra files needed at runtime (not auto-detected)
+# ============================================================
+include examples/*.py
+include README.md
+include .env.example
+include agent_audit/py.typed
+
+# ============================================================
+# Exclude: build artifacts, dev dependencies, and bloat
+# ============================================================
+
+# Python bytecode (belt-and-suspenders — setuptools skips these by
+# default, but explicit is safer when include_package_data=True)
+global-exclude *.pyc
+global-exclude *.pyo
+
+# Embedded PostgreSQL binaries (heavy, ~100MB+)
+# Already in .gitignore; excluded from sdist to keep package small
+global-exclude pg_embedded/**
+prune pg_embedded
+
+# IDE and editor droppings
+global-exclude .DS_Store
+global-exclude Thumbs.db
+

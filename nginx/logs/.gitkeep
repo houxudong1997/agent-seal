@@ -1,0 +1,2 @@
+# Placeholder — keeps nginx/logs/ in git so Docker Compose volume mapping works.
+# Log files (*.log, *.gz) are gitignored.

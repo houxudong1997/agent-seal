@@ -1,0 +1,59 @@
+# ── Agent Audit — .gitignore ──
+
+# SSL/TLS certificates (NEVER commit private keys)
+nginx/ssl/*.pem
+!nginx/ssl/README.md
+
+# Nginx logs
+nginx/logs/*.log
+nginx/logs/*.gz
+!nginx/logs/.gitkeep
+
+# Environment secrets
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv*/
+venv*/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Testing / Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.benchmarks/
+.coverage
+htmlcov/
+
+# Node / frontend
+node_modules/
+
+# Database
+*.db-journal
+*.db-wal
+pg_embedded/

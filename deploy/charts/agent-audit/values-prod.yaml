@@ -1,0 +1,165 @@
+# ═════════════════════════════════════════════════════════════════════
+# agent-audit v1.0 — Production Values Override
+# ═════════════════════════════════════════════════════════════════════
+# Layered on top of values.yaml:
+#   helm install agent-audit ./deploy/charts/agent-audit \
+#     -f ./deploy/charts/agent-audit/values-prod.yaml
+#
+# This file assumes:
+#   - External managed PostgreSQL (e.g., AWS RDS, Cloud SQL)
+#   - External managed Redis (e.g., AWS ElastiCache, Memorystore)
+#   - TLS-terminated ingress (cert-manager + Let's Encrypt)
+#   - Multi-replica HA for the API tier
+# ═════════════════════════════════════════════════════════════════════
+
+# ── Replica count ──────────────────────────────────────────────
+# Production: 2+ replicas for HA.  Use HPA to scale beyond this.
+replicaCount: 2
+
+# ── Image ───────────────────────────────────────────────────────
+image:
+  repository: agent-audit-api
+  tag: "1.0"
+  pullPolicy: Always
+
+# ── Update strategy ─────────────────────────────────────────────
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+
+# ── API service ─────────────────────────────────────────────────
+api:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 1Gi
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8081"
+    prometheus.io/path: "/metrics"
+  # -- Container security context (SOC2/HIPAA compliant defaults)
+  securityContext:
+    readOnlyRootFilesystem: true
+
+# ── Application configuration ───────────────────────────────────
+config:
+  # ── VERIFY BEFORE DEPLOYING: set these via --set or a sealed secret ──
+  #   helm install ... --set config.secretKey=$(openssl rand -hex 32)
+  #   helm install ... --set config.apiKeys[0]=sk-...
+  secretKey: ""          # REQUIRED — set at install time (do not commit)
+  apiKeys: []            # REQUIRED — at least one key for API auth
+  corsOrigins: ""        # REQUIRED — set to your frontend domain
+
+  # ── Production-grade defaults ──
+  storageBackend: "postgresql"
+  auditDir: "/app/audit_logs"
+  logLevel: "info"
+  logFormat: "json"
+
+  # ── LLM Tracing ──
+  autoTrace: false
+  tracePiiRedact: true            # Redact PII in production traces
+  traceMaxLen: 4000
+  traceCostModel: "openai"
+
+  # ── Notifications (set via sealed secret) ──
+  slackWebhook: ""
+  smtpHost: ""
+  notifyOnFailure: true           # Alert on failures in production
+
+# ── Audit logs ──────────────────────────────────────────────────
+auditLogs:
+  persistence:
+    enabled: true
+    size: 50Gi                     # Production: larger volume for audit logs
+
+# ── PostgreSQL — use external managed database ──────────────────
+postgresql:
+  enabled: false                   # Production: use external managed DB (RDS, Cloud SQL, etc.)
+
+externalDb:
+  # ╔═══════════════════════════════════════════════════════════════════════╗
+  # ║  SET AT INSTALL TIME — do not commit connection strings              ║
+  # ║                                                                      ║
+  # ║  helm install ... --set externalDb.url="postgresql://user:***@..."  ║
+  # ╚═══════════════════════════════════════════════════════════════════════╝
+  url: ""                          # Full connection string (set via --set)
+  # sslmode: require               # Enforce TLS to managed DB
+
+# ── Redis — use external managed Redis ──────────────────────────
+redis:
+  enabled: false                   # Production: use external managed Redis (ElastiCache, Memorystore, etc.)
+
+externalRedis:
+  # ╔═══════════════════════════════════════════════════════════════════════╗
+  # ║  SET AT INSTALL TIME — do not commit connection strings              ║
+  # ║                                                                      ║
+  # ║  helm install ... --set externalRedis.uri="rediss://host:6379/0"     ║
+  # ╚═══════════════════════════════════════════════════════════════════════╝
+  uri: ""                          # Full connection string (set via --set)
+
+# ── NGINX ───────────────────────────────────────────────────────
+nginx:
+  enabled: true
+  replicaCount: 2                  # HA for reverse proxy
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+# ── Ingress (TLS-terminated) ────────────────────────────────────
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+  hosts:
+    - host: agent-audit.example.com   # CHANGE to your domain
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: agent-audit-tls
+      hosts:
+        - agent-audit.example.com     # CHANGE to your domain
+
+# ── HorizontalPodAutoscaler ─────────────────────────────────────
+hpa:
+  enabled: true
+  target: api
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  # targetMemoryUtilizationPercentage: 80
+
+# ── PodDisruptionBudget ─────────────────────────────────────────
+pdb:
+  enabled: true
+  minAvailable: 1                   # At least 1 API pod always available
+
+# ── NetworkPolicy ───────────────────────────────────────────────
+networkPolicy:
+  enabled: true
+  extraIngressCIDRs:
+    - "10.100.0.0/16"               # Monitoring / management CIDR
+
+# ── ServiceMonitor (Prometheus) ─────────────────────────────────
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  path: /metrics
+
+# ── Grafana Dashboard Provisioning ────────────────────────────
+grafana:
+  enabled: true                     # Provision dashboards for Grafana sidecar

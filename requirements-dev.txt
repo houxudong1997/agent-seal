@@ -1,0 +1,17 @@
+# agent-audit — development & testing dependencies
+#
+# Install:  pip install -r requirements-dev.txt
+# Includes core dependencies from requirements.txt.
+
+-r requirements.txt
+
+# ── Testing ──────────────────────────────────────────────────
+pytest>=7.0
+
+# ── Database drivers (optional, for full backend support) ────
+# PostgreSQL driver (recommended for production)
+psycopg2-binary>=2.9
+
+# ── Optional integrations ───────────────────────────────────
+# LangChain agent framework integration
+langchain-core>=0.1

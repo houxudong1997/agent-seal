@@ -1,0 +1,1 @@
+{"event_id": "754b90ee-4bf", "session_id": "test-session", "timestamp": 1782050087.7583246, "event_type": "Config test OK", "agent_id": "test-agent", "prompt_version": "v1", "input_snapshot": "CLI manual entry", "output_snapshot": "test output", "metadata": {}, "prev_hash": "", "hash": "4723d49debecb431a0339460940857ee56e4257d8c1a32f39cbb731eccfd5b83"}

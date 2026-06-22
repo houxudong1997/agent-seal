@@ -1,0 +1,20 @@
+{{- if .Values.redis.enabled }}
+{{- if .Values.redis.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "agent-audit.fullname" . }}-redis
+  labels:
+    app.kubernetes.io/component: redis
+    {{- include "agent-audit.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.redis.persistence.size }}
+  {{- if or .Values.redis.persistence.storageClass .Values.global.storageClass }}
+  storageClassName: {{ default .Values.global.storageClass .Values.redis.persistence.storageClass }}
+  {{- end }}
+{{- end }}
+{{- end }}

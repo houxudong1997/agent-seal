@@ -1,0 +1,61 @@
+# agent-audit default policy rules
+# Each rule has: name, priority, condition, action
+
+rules:
+  - name: block-shell-write
+    priority: 100
+    enabled: true
+    description: Block destructive shell commands
+    condition:
+      event_type: tool_call
+      pattern: '\brm\s+-rf\b|\bdd\s+if=|\bmkfs\.|\bchmod\s+777\b|\b>\/dev\/|del\s+/[FS]\b'
+      pattern_flags: IGNORECASE
+    action: deny
+
+  - name: block-sql-destruction
+    priority: 95
+    enabled: true
+    description: Block destructive SQL operations
+    condition:
+      event_type: tool_call
+      pattern: '\bDROP\s+(TABLE|DATABASE)\b|\bTRUNCATE\b|\bDELETE\s+FROM\b(?!.*\bWHERE\b)'
+      pattern_flags: IGNORECASE
+    action: deny
+
+  - name: warn-internal-network
+    priority: 80
+    enabled: true
+    description: Warn when agent accesses internal IPs
+    condition:
+      pattern: '10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}'
+      pattern_flags: ~
+    action: warn
+
+  - name: approval-high-amount
+    priority: 90
+    enabled: true
+    description: Require human approval for large financial decisions
+    condition:
+      event_type: [decision, tool_call]
+      pattern: '\$\s*([\d,]+(?:\.\d{2})?)'
+      pattern_flags: ~
+      threshold: 500
+    action: approval
+
+  - name: rate-limit-tool-calls
+    priority: 70
+    enabled: true
+    description: Limit tool call frequency
+    condition:
+      event_type: tool_call
+      max_per_minute: 60
+    action: deny
+
+  - name: block-api-key-leak
+    priority: 100
+    enabled: true
+    description: Prevent accidental API key exposure
+    condition:
+      pattern: 'sk-[a-zA-Z0-9]{20,}|AKIA[A-Z0-9]{16}|github_pat_[a-zA-Z0-9]{20,}'
+      pattern_flags: ~
+    action: deny

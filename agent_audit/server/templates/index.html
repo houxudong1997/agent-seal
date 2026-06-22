@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Agent Audit Dashboard</title>
+<style>
+/* ── Design Tokens ─────────────────────────────────────────────────── */
+:root {
+  --bg: #0a0e14;
+  --bg-secondary: #0f1721;
+  --card: #111620;
+  --card-hover: #161d2c;
+  --border: #1e293b;
+  --border-light: #2a3548;
+  --text: #c9d1d9;
+  --text-bright: #e6edf3;
+  --dim: #6b7280;
+  --green: #2ea043;
+  --red: #da3633;
+  --amber: #d29922;
+  --cyan: #39d2c0;
+  --blue: #58a6ff;
+  --purple: #a371f7;
+  --radius: 8px;
+  --transition: 0.15s ease;
+}
+
+/* ── Reset & Base ──────────────────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+.app-container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+/* ── Header ────────────────────────────────────────────────────────── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: -0.02em;
+}
+.logo-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  margin-right: 8px;
+  box-shadow: 0 0 10px var(--cyan);
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.version-tag {
+  font-size: .7rem;
+  color: var(--dim);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+/* ── Stream Indicator ──────────────────────────────────────────────── */
+.stream-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .75rem;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+.stream-indicator .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: background var(--transition);
+}
+.stream-indicator.connected { border-color: var(--green); color: var(--green); }
+.stream-indicator.connected .dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.stream-indicator.reconnecting { border-color: var(--amber); color: var(--amber); }
+.stream-indicator.reconnecting .dot { background: var(--amber); animation: pulse 1.5s infinite; }
+.stream-indicator.disconnected { border-color: var(--red); color: var(--red); }
+.stream-indicator.disconnected .dot { background: var(--red); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Stats Grid ────────────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  transition: border-color var(--transition);
+}
+.stat-card:hover { border-color: var(--border-light); }
+.stat-card .value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.stat-card .value.events { color: var(--cyan); }
+.stat-card .value.sessions { color: var(--blue); }
+.stat-card .value.integrity { color: var(--green); }
+.stat-card .value.broken { color: var(--red); }
+.stat-card .label {
+  font-size: .75rem;
+  color: var(--dim);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Tabs ──────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  color: var(--dim);
+  font-size: .85rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+/* ── Tab content ───────────────────────────────────────────────────── */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Cards ─────────────────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.card-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+/* ── Tables ────────────────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+th, td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+th {
+  color: var(--amber);
+  font-weight: 600;
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+tr:hover td { background: rgba(255,255,255,0.01); }
+tr:last-child td { border-bottom: none; }
+td.mono { font-family: "SF Mono", "Fira Code", monospace; font-size: .75em; }
+td.truncate { max-width: 200px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.empty-state {
+  text-align: center;
+  color: var(--dim);
+  padding: 40px 20px;
+}
+
+/* ── Session summary cards ─────────────────────────────────────────── */
+.session-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.session-card:hover { border-color: var(--cyan); background: var(--card-hover); }
+.session-card .session-id { font-family: monospace; font-size: .85rem; }
+.session-card .session-meta { font-size: .75rem; color: var(--dim); }
+.session-card .integrity-badge { font-size: .7rem; }
+
+/* ── Badges ────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  font-size: .7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+.badge-ok { background: rgba(46,160,67,0.15); color: var(--green); }
+.badge-broken { background: rgba(218,54,51,0.15); color: var(--red); }
+.badge-type { background: rgba(57,210,192,0.12); color: var(--cyan); }
+
+/* ── Event type color mapping ──────────────────────────────────────── */
+.type-decision { color: var(--purple); }
+.type-tool_call { color: var(--blue); }
+.type-model_request { color: var(--cyan); }
+.type-guardrail { color: var(--amber); }
+.type-error { color: var(--red); }
+
+/* ── Search bar ────────────────────────────────────────────────────── */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.search-bar input, .search-bar select {
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: .82rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.search-bar input:focus, .search-bar select:focus {
+  border-color: var(--cyan);
+}
+.search-bar input { flex: 1; min-width: 200px; }
+.search-bar input::placeholder { color: var(--dim); }
+
+/* ── Buttons ───────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  font-size: .82rem;
+  font-family: inherit;
+  transition: all var(--transition);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--cyan); color: var(--text-bright); }
+.btn-primary { border-color: var(--cyan); color: var(--cyan); }
+.btn-primary:hover { background: rgba(57,210,192,0.08); }
+.btn-danger { border-color: var(--red); color: var(--red); }
+.btn-danger:hover { background: rgba(218,54,51,0.08); }
+.btn-sm { padding: 4px 10px; font-size: .75rem; }
+
+/* ── JSON viewer / pre ─────────────────────────────────────────────── */
+pre {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  overflow-x: auto;
+  font-size: .78rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── API endpoint grid ─────────────────────────────────────────────── */
+.api-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 8px;
+}
+.api-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  font-size: .78rem;
+  font-family: monospace;
+}
+.api-method {
+  font-weight: 700;
+  min-width: 44px;
+}
+.api-method.get { color: var(--blue); }
+.api-method.post { color: var(--green); }
+
+/* ── Toast / notification ──────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font-size: .82rem;
+  z-index: 1000;
+  animation: slideUp 0.3s ease;
+  max-width: 400px;
+}
+.toast-success { background: rgba(46,160,67,0.9); color: #fff; }
+.toast-error { background: rgba(218,54,51,0.9); color: #fff; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .app-container { padding: 16px 12px; }
+  header { flex-direction: column; align-items: flex-start; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .api-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app-container">
+  <!-- ═══════════ HEADER ═══════════ -->
+  <header>
+    <div>
+      <h1><span class="logo-dot"></span>Agent Audit Dashboard</h1>
+    </div>
+    <div class="header-right">
+      <span class="version-tag">v1.0.1</span>
+      <span id="stream-status" class="stream-indicator connecting">
+        <span class="dot"></span>
+        <span id="stream-label">Connecting…</span>
+      </span>
+    </div>
+  </header>
+
+  <!-- ═══════════ STATS ═══════════ -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card"><div class="value events">--</div><div class="label">Total Events</div></div>
+    <div class="stat-card"><div class="value sessions">--</div><div class="label">Sessions</div></div>
+    <div class="stat-card"><div class="value integrity">--</div><div class="label">Chain Integrity</div></div>
+    <div class="stat-card"><div class="value" id="event-types-count" style="color:var(--amber)">--</div><div class="label">Event Types</div></div>
+  </div>
+
+  <!-- ═══════════ TABS ═══════════ -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="events-tab">Live Events</button>
+    <button class="tab-btn" data-tab="sessions-tab">Sessions</button>
+    <button class="tab-btn" data-tab="search-tab">Search</button>
+    <button class="tab-btn" data-tab="api-tab">API Reference</button>
+  </div>
+
+  <!-- ═══════════ LIVE EVENTS TAB ═══════════ -->
+  <div id="events-tab" class="tab-content active">
+    <div class="card">
+      <div class="card-header">
+        <h2>Event Feed</h2>
+        <span style="font-size:.75rem;color:var(--dim)" id="event-count-label">0 events</span>
+      </div>
+      <div class="table-wrapper" style="max-height:500px;overflow-y:auto">
+        <table>
+          <thead><tr>
+            <th>Time</th><th>Session</th><th>Type</th><th>Agent</th><th>Event ID</th>
+          </tr></thead>
+          <tbody id="event-feed">
+            <tr><td colspan="5" class="empty-state">Waiting for events…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SESSIONS TAB ═══════════ -->
+  <div id="sessions-tab" class="tab-content">
+    <div class="card">
+      <div class="card-header">
+        <h2>Sessions</h2>
+        <button class="btn btn-sm" onclick="loadSessions()">Refresh</button>
+      </div>
+      <div id="sessions-list"><p class="empty-state">Loading…</p></div>
+    </div>
+    <div id="session-detail" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <h2 id="session-detail-title">Session Detail</h2>
+          <button class="btn btn-sm" onclick="document.getElementById('session-detail').style.display='none'">✕ Close</button>
+        </div>
+        <div id="session-detail-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SEARCH TAB ═══════════ -->
+  <div id="search-tab" class="tab-content">
+    <div class="card">
+      <div class="card-header"><h2>Search Events</h2></div>
+      <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Search by session ID, event type, agent ID…" onkeydown="if(event.key==='Enter')searchEvents()">
+        <select id="search-type-filter">
+          <option value="">All types</option>
+          <option value="decision">decision</option>
+          <option value="tool_call">tool_call</option>
+          <option value="model_request">model_request</option>
+          <option value="guardrail">guardrail</option>
+          <option value="error">error</option>
+        </select>
+        <button class="btn btn-primary" onclick="searchEvents()">Search</button>
+      </div>
+      <div id="search-results"><p class="empty-state">Enter a query to search events</p></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ API TAB ═══════════ -->
+  <div id="api-tab" class="tab-content">
+    <div class="card">
+      <div class="card-header"><h2>REST API v1</h2></div>
+      <div class="api-grid">
+        <div class="api-item"><span class="api-method get">GET</span><span>/api/v1/stats</span></div>
+        <div class="api-item"><span class="api-method get">GET</span><span>/api/v1/events</span></div>
+        <div class="api-item"><span class="api-method get">GET</span><span>/api/v1/events/stream</span></div>
+        <div class="api-item"><span class="api-method get">GET</span><span>/api/v1/sessions</span></div>
+        <div class="api-item"><span class="api-method get">GET</span><span>/api/v1/sessions/:id</span></div>
+        <div class="api-item"><span class="api-method post">POST</span><span>/api/v1/log</span></div>
+        <div class="api-item"><span class="api-method post">POST</span><span>/api/v1/verify</span></div>
+        <div class="api-item"><span class="api-method get">GET</span><span>/health</span></div>
+        <div class="api-item"><span class="api-method get">GET</span><span>/metrics</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:.9rem;color:var(--text-bright);margin-bottom:8px">Quick Test</h3>
+      <button class="btn btn-primary" onclick="recordTestEvent()" style="margin-bottom:12px">▶ Record Test Event</button>
+      <pre id="api-result" style="display:none"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════ CONFIG ═════════════════════════════════════ */
+const STREAM_URL = '/api/v1/events/stream';
+const MAX_FEED_ROWS = 50;
+
+/* ═══════════════════════ STATE ═════════════════════════════════════ */
+let eventFeed = [];
+
+/* ═══════════════════════ TAB SWITCHING ═════════════════════════════ */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'sessions-tab') loadSessions();
+  });
+});
+
+/* ═══════════════════════ STATS LOADING ═════════════════════════════ */
+async function loadStats() {
+  try {
+    const r = await fetch('/api/v1/stats');
+    const s = await r.json();
+    const cards = document.querySelectorAll('.stat-card .value');
+    cards[0].textContent = s.total_events ?? 0;
+    cards[1].textContent = s.sessions ?? 0;
+
+    const intEl = cards[2];
+    if (s.integrity === 'ok') {
+      intEl.textContent = '✓ Intact';
+      intEl.className = 'value integrity';
+    } else {
+      intEl.textContent = '✗ Broken';
+      intEl.className = 'value broken';
+    }
+
+    const types = s.event_types || {};
+    const typeCount = Object.keys(types).length;
+    document.getElementById('event-types-count').textContent = typeCount;
+  } catch(e) {
+    console.error('Stats load failed:', e);
+  }
+}
+
+/* ═══════════════════════ LOAD SESSIONS ═════════════════════════════ */
+async function loadSessions() {
+  const el = document.getElementById('sessions-list');
+  try {
+    const r = await fetch('/api/v1/sessions');
+    const data = await r.json();
+    const sessions = data.sessions || [];
+    if (!sessions.length) {
+      el.innerHTML = '<p class="empty-state">No sessions recorded yet</p>';
+      return;
+    }
+    el.innerHTML = sessions.map(s => {
+      const badge = s.integrity === 'ok'
+        ? '<span class="badge badge-ok">Intact</span>'
+        : '<span class="badge badge-broken">Broken</span>';
+      const ts = s.last_timestamp ? new Date(s.last_timestamp * 1000).toLocaleString() : 'N/A';
+      return `<div class="session-card" onclick="loadSessionDetail('${s.session_id}')">
+        <div>
+          <div class="session-id">${s.session_id}</div>
+          <div class="session-meta">${s.event_count} events · ${s.agent_id || '?'}</div>
+        </div>
+        <div style="text-align:right">
+          ${badge}
+          <div class="session-meta">${ts}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<p class="empty-state">Failed to load sessions</p>';
+  }
+}
+
+/* ═══════════════════════ SESSION DETAIL ════════════════════════════ */
+async function loadSessionDetail(sid) {
+  const container = document.getElementById('session-detail');
+  const title = document.getElementById('session-detail-title');
+  const content = document.getElementById('session-detail-content');
+  title.textContent = `Session: ${sid}`;
+  container.style.display = 'block';
+  content.innerHTML = '<p style="color:var(--dim)">Loading…</p>';
+  try {
+    const r = await fetch(`/api/v1/sessions/${sid}`);
+    const data = await r.json();
+    if (data.error) {
+      content.innerHTML = `<p class="empty-state">${data.error}</p>`;
+      return;
+    }
+    const badge = data.integrity === 'ok'
+      ? '<span class="badge badge-ok">Chain Intact</span>'
+      : '<span class="badge badge-broken">Chain Broken</span>';
+    let html = `<div style="margin-bottom:12px">${badge} <span style="color:var(--dim);font-size:.8rem;margin-left:8px">${data.event_count} events</span></div>`;
+    html += '<table><thead><tr><th>#</th><th>Time</th><th>Type</th><th>Agent</th><th>Event ID</th><th>Hash</th></tr></thead><tbody>';
+    html += (data.events||[]).map((e,i) => {
+      const ts = e.timestamp ? new Date(e.timestamp * 1000).toLocaleString() : '';
+      const typeClass = `type-${e.event_type || ''}`;
+      return `<tr>
+        <td>${i+1}</td><td>${ts}</td>
+        <td><span class="${typeClass}">${e.event_type||''}</span></td>
+        <td>${e.agent_id||''}</td>
+        <td class="mono">${(e.event_id||'').substring(0,12)}</td>
+        <td class="mono" style="font-size:.7em">${(e.hash||'').substring(0,16)}</td>
+      </tr>`;
+    }).join('');
+    html += '</tbody></table>';
+    content.innerHTML = html;
+    container.scrollIntoView({ behavior: 'smooth' });
+  } catch(e) {
+    content.innerHTML = '<p class="empty-state">Failed to load session</p>';
+  }
+}
+
+/* ═══════════════════════ SEARCH ═══════════════════════════════════ */
+async function searchEvents() {
+  const query = document.getElementById('search-input').value.trim();
+  const typeFilter = document.getElementById('search-type-filter').value;
+  const results = document.getElementById('search-results');
+
+  if (!query && !typeFilter) {
+    results.innerHTML = '<p class="empty-state">Enter a query to search events</p>';
+    return;
+  }
+
+  results.innerHTML = '<p style="color:var(--dim)">Searching…</p>';
+  try {
+    const params = new URLSearchParams({ limit: 100, offset: 0 });
+    if (typeFilter) params.set('event_type', typeFilter);
+    const r = await fetch(`/api/v1/events?${params}`);
+    const data = await r.json();
+    const events = (data.events || []).filter(e => {
+      if (!query) return true;
+      const q = query.toLowerCase();
+      return (e.session_id||'').toLowerCase().includes(q)
+        || (e.event_type||'').toLowerCase().includes(q)
+        || (e.agent_id||'').toLowerCase().includes(q)
+        || (e.event_id||'').toLowerCase().includes(q);
+    });
+
+    if (!events.length) {
+      results.innerHTML = '<p class="empty-state">No events match your query</p>';
+      return;
+    }
+
+    let html = `<p style="color:var(--dim);margin-bottom:8px">${events.length} results</p>`;
+    html += '<table><thead><tr><th>Time</th><th>Session</th><th>Type</th><th>Agent</th><th>Event ID</th></tr></thead><tbody>';
+    html += events.map(e => {
+      const ts = e.timestamp ? new Date(e.timestamp * 1000).toLocaleString() : '';
+      return `<tr>
+        <td>${ts}</td>
+        <td class="mono" style="cursor:pointer;color:var(--cyan)" onclick="loadSessionDetail('${e.session_id}');document.querySelector('[data-tab=sessions-tab]').click()">${(e.session_id||'').substring(0,20)}</td>
+        <td><span class="badge badge-type">${e.event_type||''}</span></td>
+        <td>${e.agent_id||''}</td>
+        <td class="mono">${(e.event_id||'').substring(0,12)}</td>
+      </tr>`;
+    }).join('');
+    html += '</tbody></table>';
+    results.innerHTML = html;
+  } catch(e) {
+    results.innerHTML = '<p class="empty-state">Search failed</p>';
+  }
+}
+
+/* ═══════════════════════ SSE STREAM ═══════════════════════════════ */
+function connectSSE() {
+  const statusEl = document.getElementById('stream-status');
+  const labelEl = document.getElementById('stream-label');
+  const feedBody = document.getElementById('event-feed');
+
+  const evtSource = new EventSource(STREAM_URL);
+
+  evtSource.addEventListener('connected', (e) => {
+    statusEl.className = 'stream-indicator connected';
+    labelEl.textContent = 'LIVE';
+  });
+
+  evtSource.addEventListener('new_event', (e) => {
+    try {
+      const evt = JSON.parse(e.data);
+      eventFeed.unshift(evt);
+      if (eventFeed.length > MAX_FEED_ROWS) eventFeed.pop();
+      renderEventFeed();
+      // Refresh stats periodically (every 10 events)
+      if (eventFeed.length % 10 === 1) loadStats();
+    } catch(_) {}
+  });
+
+  evtSource.addEventListener('ping', () => {});
+
+  evtSource.onerror = () => {
+    statusEl.className = 'stream-indicator reconnecting';
+    labelEl.textContent = 'Reconnecting…';
+  };
+
+  evtSource.onopen = () => {
+    statusEl.className = 'stream-indicator connected';
+    labelEl.textContent = 'LIVE';
+  };
+}
+
+function renderEventFeed() {
+  const feedBody = document.getElementById('event-feed');
+  document.getElementById('event-count-label').textContent = `${eventFeed.length} events`;
+
+  if (!eventFeed.length) {
+    feedBody.innerHTML = '<tr><td colspan="5" class="empty-state">Waiting for events…</td></tr>';
+    return;
+  }
+
+  feedBody.innerHTML = eventFeed.map(e => {
+    const ts = (e.timestamp || 0) ? new Date((e.timestamp || 0) * 1000).toLocaleTimeString() : '';
+    const typeClass = `type-${e.event_type || ''}`;
+    return `<tr style="animation:fadeIn 0.3s ease">
+      <td>${ts}</td>
+      <td class="mono" style="cursor:pointer;color:var(--cyan)" onclick="loadSessionDetail('${e.session_id}');document.querySelector('[data-tab=sessions-tab]').click()">${(e.session_id||'').substring(0,16)}</td>
+      <td><span class="badge badge-type ${typeClass}">${e.event_type||''}</span></td>
+      <td>${e.agent_id||''}</td>
+      <td class="mono">${(e.event_id||'').substring(0,12)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ═══════════════════════ TEST EVENT ═══════════════════════════════ */
+async function recordTestEvent() {
+  const pre = document.getElementById('api-result');
+  pre.style.display = 'block';
+  pre.textContent = 'POST /api/v1/log …';
+  try {
+    const r = await fetch('/api/v1/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: 'dashboard-test',
+        event_type: 'decision',
+        agent_id: 'dashboard-agent',
+        prompt_version: 'v1',
+        input: 'test input from dashboard',
+        output: 'test output — recorded at ' + new Date().toISOString(),
+      })
+    });
+    const data = await r.json();
+    pre.textContent = JSON.stringify(data, null, 2);
+    showToast('Event recorded: ' + data.event_id, 'success');
+    loadStats();
+  } catch(e) {
+    pre.textContent = 'Error: ' + e.message;
+    showToast('Failed to record event', 'error');
+  }
+}
+
+/* ═══════════════════════ TOAST ═══════════════════════════════════ */
+function showToast(msg, type) {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+/* ═══════════════════════ INITIAL LOAD ═══════════════════════════ */
+async function loadInitialEvents() {
+  try {
+    const r = await fetch('/api/v1/events?limit=50');
+    const data = await r.json();
+    const events = data.events || [];
+    if (events.length) {
+      eventFeed = events.slice().reverse().slice(0, MAX_FEED_ROWS);
+      renderEventFeed();
+    }
+  } catch(e) {
+    console.error('Failed to load initial events:', e);
+  }
+}
+
+/* ═══════════════════════ INIT ═══════════════════════════════ */
+loadStats();
+loadInitialEvents();
+connectSSE();
+</script>
+</body>
+</html>

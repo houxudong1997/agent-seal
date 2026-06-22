@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="agent-audit",
-    version="1.0.0",
+    version="1.1.0",
     description="Tamper-evident audit trail for AI agents — EU AI Act ready",
     author="Mr.H",
     license={"text": "MIT"},

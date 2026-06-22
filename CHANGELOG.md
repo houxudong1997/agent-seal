@@ -5,6 +5,15 @@ All notable changes to agent-audit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-06-22
+
+### Added
+- **@observe decorator** — Lightweight function tracing. `@observe` records inputs, outputs, execution time, and nested parent-child spans into the audit trail.
+- **LangChain CallbackHandler** — Native tracing for LangChain LCEL chains, agents, and tools via `LangChainAuditHandler`.
+- **Hermes middleware** — Zero-config middleware for Hermes Agent framework, auto-instruments all agent actions.
+- **Global sitecustomize hook** — Zero-code auto-instrumentation. Drop `sitecustomize.py` into site-packages and all Python processes are automatically traced — no code changes needed.
+- **SPA Dashboard enhancements** — Event list with expandable details, smart previews, model/latency columns, binary/garbled output filtering.
+
 ## [1.0.0] — 2026-06-21
 
 ### Added
@@ -42,4 +51,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Legacy v0.1 API paths (`GET /sessions`, `GET /stats`, `POST /log`, `POST /verify`). Migrate to `/api/v1/` equivalents.
 - Legacy environment variable names (`AUDIT_DIR`, `DB_URL`, `API_KEYS`, `SECRET_KEY`, `LOG_LEVEL`). Migrate to `AGENT_AUDIT_` prefix.
 
+[1.1.0]: https://github.com/user/agent-audit/releases/tag/v1.1.0
 [1.0.0]: https://github.com/user/agent-audit/releases/tag/v1.0.0

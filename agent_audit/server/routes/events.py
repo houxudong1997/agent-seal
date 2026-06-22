@@ -33,6 +33,41 @@ legacy_router = APIRouter(tags=["events-legacy"])
 # ═══════════════════════ V1 ENDPOINTS ════════════════════════════════════
 
 
+# ── /events/stream MUST be defined before /events/{event_id} ──
+# otherwise FastAPI matches "stream" as an event_id parameter
+
+
+@router.get("/events/stream")
+async def api_events_stream(request: Request):
+    """Server-Sent Events endpoint — pushes new events in real time."""
+
+    async def event_generator():
+        queue: asyncio.Queue = asyncio.Queue(maxsize=256)
+        register_stream_listener(queue)
+        try:
+            # Send initial connection event
+            yield {
+                "event": "connected",
+                "data": json.dumps({"message": "Stream connected"}),
+            }
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=15.0)
+                    yield {
+                        "event": "new_event",
+                        "data": json.dumps(event, default=str),
+                    }
+                except TimeoutError:
+                    # Send keepalive ping
+                    yield {"event": "ping", "data": ""}
+        finally:
+            unregister_stream_listener(queue)
+
+    return EventSourceResponse(event_generator())
+
+
 @router.get("/events/{event_id}")
 async def api_event_detail(event_id: str):
     """Get a single audit event by its event_id."""
@@ -89,37 +124,6 @@ async def api_events(
         offset=offset,
     )
     return {"events": events, "total": total, "limit": limit, "offset": offset}
-
-
-@router.get("/events/stream")
-async def api_events_stream(request: Request):
-    """Server-Sent Events endpoint — pushes new events in real time."""
-
-    async def event_generator():
-        queue: asyncio.Queue = asyncio.Queue(maxsize=256)
-        register_stream_listener(queue)
-        try:
-            # Send initial connection event
-            yield {
-                "event": "connected",
-                "data": json.dumps({"message": "Stream connected"}),
-            }
-            while True:
-                if await request.is_disconnected():
-                    break
-                try:
-                    event = await asyncio.wait_for(queue.get(), timeout=15.0)
-                    yield {
-                        "event": "new_event",
-                        "data": json.dumps(event, default=str),
-                    }
-                except TimeoutError:
-                    # Send keepalive ping
-                    yield {"event": "ping", "data": ""}
-        finally:
-            unregister_stream_listener(queue)
-
-    return EventSourceResponse(event_generator())
 
 
 @router.post("/log")

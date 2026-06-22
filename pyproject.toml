@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-audit"
-version = "1.0.0"
+version = "1.1.0"
 description = "Tamper-evident audit trail for AI agents — EU AI Act ready"
 authors = [{ name = "Mr.H" }]
 license = { text = "MIT" }

@@ -9,21 +9,17 @@
     type HealthResponse,
   } from "./api";
 
-  // Health status
   let health: HealthResponse | null = $state(null);
   let healthLoading = $state(true);
 
-  // Session list for verification
   let sessions: SessionSummary[] = $state([]);
   let sessionsLoading = $state(true);
 
-  // Verification state
-  let verifing = $state(false);
+  let verifying = $state(false);
   let verifyResult: VerifyResponse | null = $state(null);
   let verifyError: string | null = $state(null);
   let selectedSessionId: string = $state("");
 
-  // Evidence pack state
   let evidenceSessionId: string = $state("");
   let evidenceLoading = $state(false);
   let evidencePack: {
@@ -40,7 +36,6 @@
   } | null = $state(null);
   let evidenceError: string | null = $state(null);
 
-  // Load health and sessions on mount
   $effect(() => {
     loadHealth();
     loadSessions();
@@ -70,7 +65,7 @@
   }
 
   async function handleVerifyAll() {
-    verifing = true;
+    verifying = true;
     verifyError = null;
     try {
       verifyResult = await verifyChain();
@@ -78,13 +73,13 @@
       verifyError = String(e);
       verifyResult = null;
     } finally {
-      verifing = false;
+      verifying = false;
     }
   }
 
   async function handleVerifySession() {
     if (!selectedSessionId) return;
-    verifing = true;
+    verifying = true;
     verifyError = null;
     try {
       verifyResult = await verifyChain(selectedSessionId);
@@ -92,7 +87,7 @@
       verifyError = String(e);
       verifyResult = null;
     } finally {
-      verifing = false;
+      verifying = false;
     }
   }
 
@@ -140,21 +135,24 @@
 </script>
 
 <div class="compliance-grid">
-  <!-- Left column: Health + Chain Verification -->
+  <!-- Left column -->
   <div class="col">
     <!-- Health Status -->
-    <div class="card">
-      <div class="card-header">
-        <h2>Health Status</h2>
-        <button class="btn btn-sm" onclick={loadHealth}>Refresh</button>
+    <div class="glass-card">
+      <div class="card-head">
+        <div class="card-title-group">
+          <h2>Health Status</h2>
+          <span class="status-dot" class:ok={health?.status === "ok"}></span>
+        </div>
+        <button class="btn btn-ghost" onclick={loadHealth}>Refresh</button>
       </div>
       {#if healthLoading}
-        <p class="empty-state">Checking…</p>
+        <div class="empty-state"><div class="empty-pulse"></div><p>Checking...</p></div>
       {:else if health}
         <div class="health-detail">
           <div class="health-row">
             <span class="health-label">API Status</span>
-            <span class="badge badge-ok">{health.status}</span>
+            <span class="status-badge-ok">{health.status}</span>
           </div>
           <div class="health-row">
             <span class="health-label">Version</span>
@@ -167,37 +165,34 @@
     </div>
 
     <!-- Chain Verification -->
-    <div class="card">
-      <div class="card-header">
+    <div class="glass-card">
+      <div class="card-head">
         <h2>Chain Verification</h2>
       </div>
-      <p class="description">
+      <p class="card-desc">
         Verify the cryptographic hash chain integrity across all sessions or a specific session.
       </p>
 
       <div class="verify-actions">
-        <button class="btn btn-primary" onclick={handleVerifyAll} disabled={verifing}>
-          {verifing ? "Verifying…" : "Verify All Sessions"}
+        <button class="btn btn-primary" onclick={handleVerifyAll} disabled={verifying}>
+          {verifying ? "Verifying..." : "Verify All Sessions"}
         </button>
       </div>
 
       <div class="verify-single">
-        <select
-          bind:value={selectedSessionId}
-          class="session-select"
-        >
+        <select bind:value={selectedSessionId} class="select-glass">
           <option value="">-- Select a session --</option>
           {#each sessions as s (s.session_id)}
-            <option value={s.session_id}>{s.session_id} ({s.event_count} events, {s.integrity})</option>
+            <option value={s.session_id}>{s.session_id}</option>
           {/each}
         </select>
-        <button class="btn" onclick={handleVerifySession} disabled={verifing || !selectedSessionId}>
-          Verify Session
+        <button class="btn" onclick={handleVerifySession} disabled={verifying || !selectedSessionId}>
+          Verify
         </button>
       </div>
 
       {#if verifyError}
-        <div class="result error">
+        <div class="result result-error">
           <p>Error: {verifyError}</p>
         </div>
       {/if}
@@ -205,47 +200,46 @@
       {#if verifyResult}
         <div class="result {verifyResult.integrity === 'ok' ? 'result-ok' : 'result-broken'}">
           <div class="result-header">
-            <span class="result-badge">
-              {verifyResult.integrity === "ok" ? "✓ All Chains Intact" : "✗ Chain(s) Broken"}
-            </span>
+            <span class="result-icon">{verifyResult.integrity === "ok" ? "✓" : "✗"}</span>
+            <span>{verifyResult.integrity === "ok" ? "All Chains Intact" : "Chain(s) Broken"}</span>
           </div>
           {#if verifyResult.sessions}
             <div class="result-sessions">
               {#each Object.entries(verifyResult.sessions) as [sid, status]}
                 <div class="result-session-row">
-                  <span class="mono session-name">{sid}</span>
-                  <span class="badge" class:badge-ok={status === "ok"} class:badge-broken={status === "broken"}>
+                  <span class="mono sid-text">{sid}</span>
+                  <span class="integrity-badge" class:badge-ok={status === "ok"} class:badge-broken={status !== "ok"}>
                     {status}
                   </span>
                 </div>
               {/each}
             </div>
           {:else if verifyResult.session_id}
-            <p>Session {verifyResult.session_id}: <strong>{verifyResult.integrity}</strong></p>
+            <p class="result-single">Session {verifyResult.session_id}: <strong>{verifyResult.integrity}</strong></p>
           {/if}
         </div>
       {/if}
     </div>
   </div>
 
-  <!-- Right column: Prompt Versions + Evidence Pack -->
+  <!-- Right column -->
   <div class="col">
     <!-- Prompt Versions -->
-    <div class="card">
-      <div class="card-header">
+    <div class="glass-card">
+      <div class="card-head">
         <h2>Prompt Versions</h2>
       </div>
-      <p class="description">
+      <p class="card-desc">
         Track prompt versions used across sessions. Each event records the prompt version active at the time of the agent decision.
       </p>
       {#if sessionsLoading}
-        <p class="empty-state">Loading…</p>
+        <div class="empty-state"><div class="empty-pulse"></div><p>Loading...</p></div>
       {:else if sessions.length > 0}
         <div class="prompt-list">
           {#each sessions as s (s.session_id)}
             <div class="prompt-row">
-              <span class="mono session-name">{s.session_id}</span>
-              <span class="text-dim">{s.last_event_type}</span>
+              <span class="mono prompt-sid">{s.session_id}</span>
+              <span class="prompt-type">{s.last_event_type}</span>
             </div>
           {/each}
         </div>
@@ -255,45 +249,37 @@
     </div>
 
     <!-- Evidence Pack -->
-    <div class="card">
-      <div class="card-header">
+    <div class="glass-card">
+      <div class="card-head">
         <h2>Evidence Pack</h2>
       </div>
-      <p class="description">
+      <p class="card-desc">
         Generate a compliance evidence pack for a session — includes chain validation, event timeline, and agent prompt version history.
       </p>
 
       <div class="evidence-form">
-        <select
-          bind:value={evidenceSessionId}
-          class="session-select"
-        >
+        <select bind:value={evidenceSessionId} class="select-glass">
           <option value="">-- Select session --</option>
           {#each sessions as s (s.session_id)}
             <option value={s.session_id}>{s.session_id}</option>
           {/each}
         </select>
-        <button
-          class="btn btn-primary"
-          onclick={handleGenerateEvidence}
-          disabled={evidenceLoading || !evidenceSessionId}
-        >
-          {evidenceLoading ? "Generating…" : "Generate Evidence Pack"}
+        <button class="btn btn-primary" onclick={handleGenerateEvidence} disabled={evidenceLoading || !evidenceSessionId}>
+          {evidenceLoading ? "Generating..." : "Generate"}
         </button>
       </div>
 
       {#if evidenceError}
-        <div class="result error">
+        <div class="result result-error">
           <p>Error: {evidenceError}</p>
         </div>
       {/if}
 
       {#if evidencePack}
-        <div class="result result-ok">
+        <div class="result {evidencePack.chain_valid ? 'result-ok' : 'result-warn'}">
           <div class="result-header">
-            <span class="result-badge">
-              {evidencePack.chain_valid ? "✓ Evidence Pack Ready" : "⚠ Evidence Pack (Chain Broken)"}
-            </span>
+            <span class="result-icon">{evidencePack.chain_valid ? "✓" : "⚠"}</span>
+            <span>{evidencePack.chain_valid ? "Evidence Pack Ready" : "Chain Broken"}</span>
           </div>
           <div class="evidence-grid">
             <div class="evidence-field">
@@ -301,12 +287,12 @@
               <span class="mono">{evidencePack.session_id}</span>
             </div>
             <div class="evidence-field">
-              <span class="field-label">Total Events</span>
+              <span class="field-label">Events</span>
               <span>{evidencePack.event_count}</span>
             </div>
             <div class="evidence-field">
-              <span class="field-label">Chain Integrity</span>
-              <span class="badge" class:badge-ok={evidencePack.chain_valid} class:badge-broken={!evidencePack.chain_valid}>
+              <span class="field-label">Integrity</span>
+              <span class="integrity-badge" class:badge-ok={evidencePack.chain_valid} class:badge-broken={!evidencePack.chain_valid}>
                 {evidencePack.integrity}
               </span>
             </div>
@@ -314,13 +300,9 @@
               <span class="field-label">Hash Count</span>
               <span>{evidencePack.hash_count}</span>
             </div>
-            <div class="evidence-field">
-              <span class="field-label">First Event</span>
-              <span class="mono">{evidencePack.first_event_time}</span>
-            </div>
-            <div class="evidence-field">
-              <span class="field-label">Last Event</span>
-              <span class="mono">{evidencePack.last_event_time}</span>
+            <div class="evidence-field span-2">
+              <span class="field-label">Period</span>
+              <span class="mono period">{evidencePack.first_event_time} — {evidencePack.last_event_time}</span>
             </div>
           </div>
 
@@ -330,8 +312,8 @@
               <div class="type-chips">
                 {#each Object.entries(evidencePack.event_types) as [type, count]}
                   <span class="type-chip">
-                    <span class="badge badge-type type-{type}">{type}</span>
-                    <span class="count">{count}</span>
+                    <span class="event-type-badge type-{type}">{type}</span>
+                    <span class="chip-count">{count}</span>
                   </span>
                 {/each}
               </div>
@@ -379,31 +361,56 @@
     gap: 16px;
   }
 
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
+  .glass-card {
+    background: var(--glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    transition: border-color var(--transition);
   }
 
-  .card-header {
+  .glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  .card-head {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
 
-  .card-header h2 {
-    font-size: 1rem;
+  .card-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-head h2 {
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--text-bright);
+    letter-spacing: -0.01em;
   }
 
-  .description {
-    font-size: 0.82rem;
+  .card-desc {
+    font-size: 0.8rem;
     color: var(--dim);
     margin-bottom: 16px;
-    line-height: 1.5;
+    line-height: 1.55;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--dim);
+  }
+  .status-dot.ok {
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
   }
 
   .health-detail {
@@ -416,15 +423,28 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
-    background: var(--bg-secondary);
-    border-radius: 6px;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
   }
 
   .health-label {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     color: var(--dim);
     text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .status-badge-ok {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(52, 211, 153, 0.1);
+    color: var(--green);
+    border: 1px solid rgba(52, 211, 153, 0.12);
   }
 
   .verify-actions {
@@ -437,20 +457,23 @@
     margin-bottom: 12px;
   }
 
-  .session-select {
+  .select-glass {
     flex: 1;
-    padding: 8px 12px;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    padding: 10px 14px;
+    background: var(--glass-alt);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
     color: var(--text);
-    font-size: 0.82rem;
-    font-family: inherit;
+    font-size: 0.8rem;
+    font-family: var(--font);
     outline: none;
+    cursor: pointer;
+    transition: border-color var(--transition);
   }
 
-  .session-select:focus {
-    border-color: var(--cyan);
+  .select-glass:focus {
+    border-color: var(--glass-border-active);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.04);
   }
 
   .evidence-form {
@@ -461,42 +484,49 @@
 
   .result {
     margin-top: 12px;
-    padding: 14px;
+    padding: 18px;
     border-radius: var(--radius);
     border: 1px solid;
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   .result-ok {
-    background: rgba(46, 160, 67, 0.06);
-    border-color: rgba(46, 160, 67, 0.25);
+    border-color: rgba(52, 211, 153, 0.2);
+    box-shadow: inset 0 0 20px rgba(52, 211, 153, 0.02);
   }
+  .result-ok .result-header { color: var(--green); }
 
   .result-broken {
-    background: rgba(218, 54, 51, 0.06);
-    border-color: rgba(218, 54, 51, 0.25);
+    border-color: rgba(248, 113, 113, 0.2);
+    box-shadow: inset 0 0 20px rgba(248, 113, 113, 0.02);
   }
+  .result-broken .result-header { color: var(--red); }
 
-  .result.error {
-    background: rgba(218, 54, 51, 0.06);
-    border-color: var(--red);
+  .result-warn {
+    border-color: rgba(245, 158, 11, 0.2);
+    box-shadow: inset 0 0 20px rgba(245, 158, 11, 0.02);
+  }
+  .result-warn .result-header { color: var(--amber); }
+
+  .result-error {
+    background: rgba(248, 113, 113, 0.04);
+    border-color: rgba(248, 113, 113, 0.2);
     color: var(--red);
   }
 
   .result-header {
-    margin-bottom: 10px;
-  }
-
-  .result-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
-  .result-ok .result-badge {
-    color: var(--green);
-  }
-
-  .result-broken .result-badge {
-    color: var(--red);
+  .result-icon {
+    font-size: 1.1rem;
   }
 
   .result-sessions {
@@ -510,39 +540,88 @@
     justify-content: space-between;
     align-items: center;
     padding: 6px 10px;
-    background: var(--bg-secondary);
-    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-sm);
+  }
+
+  .sid-text {
+    font-size: 0.72rem;
+    word-break: break-all;
+  }
+
+  .result-single {
+    font-size: 0.82rem;
+  }
+
+  .prompt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .prompt-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+  }
+
+  .prompt-sid {
+    font-size: 0.75rem;
+    word-break: break-all;
+  }
+
+  .prompt-type {
+    font-size: 0.7rem;
+    color: var(--dim);
+    flex-shrink: 0;
+    margin-left: 8px;
   }
 
   .evidence-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 6px;
   }
 
   .evidence-field {
-    padding: 8px 10px;
-    background: var(--bg-secondary);
-    border-radius: 4px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-sm);
+  }
+
+  .evidence-field.span-2 {
+    grid-column: 1 / -1;
   }
 
   .field-label {
     display: block;
-    font-size: 0.7rem;
+    font-size: 0.6rem;
     color: var(--dim);
     text-transform: uppercase;
+    letter-spacing: 0.06em;
     margin-bottom: 2px;
   }
 
+  .period {
+    font-size: 0.7rem;
+    word-break: break-all;
+  }
+
   .evidence-section {
-    margin-top: 12px;
+    margin-top: 14px;
   }
 
   .evidence-section h3 {
-    font-size: 0.8rem;
-    color: var(--text-bright);
-    margin-bottom: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
   }
 
   .type-chips {
@@ -554,16 +633,13 @@
   .type-chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    background: var(--bg-secondary);
-    border-radius: 4px;
-    padding: 4px 8px;
+    gap: 6px;
   }
 
-  .type-chip .count {
-    font-size: 0.75rem;
+  .chip-count {
+    font-size: 0.72rem;
     color: var(--dim);
-    font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
 
   .chip-list {
@@ -574,100 +650,91 @@
 
   .chip {
     display: inline-block;
-    padding: 3px 10px;
-    background: var(--bg-secondary);
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    color: var(--text);
   }
 
   .version-chip {
-    color: var(--cyan);
-    border: 1px solid rgba(57, 210, 192, 0.2);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
   }
 
-  .badge {
+  .integrity-badge {
     display: inline-block;
-    font-size: 0.7rem;
+    font-size: 0.62rem;
+    font-weight: 600;
     padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: 500;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
   }
 
   .badge-ok {
-    background: rgba(46, 160, 67, 0.15);
+    background: rgba(52, 211, 153, 0.1);
     color: var(--green);
+    border: 1px solid rgba(52, 211, 153, 0.12);
   }
 
   .badge-broken {
-    background: rgba(218, 54, 51, 0.15);
+    background: rgba(248, 113, 113, 0.1);
     color: var(--red);
+    border: 1px solid rgba(248, 113, 113, 0.12);
   }
 
-  .badge-type {
-    background: rgba(57, 210, 192, 0.12);
-    color: var(--cyan);
+  .event-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+    text-transform: lowercase;
+    font-family: var(--font-mono);
+    white-space: nowrap;
   }
 
-  .type-decision {
-    color: var(--purple);
+  .type-llm_request {
+    background: rgba(245, 158, 11, 0.12);
+    color: #FBBF24;
+    border: 1px solid rgba(245, 158, 11, 0.15);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.06);
   }
 
   .type-tool_call {
+    background: rgba(96, 165, 250, 0.1);
     color: var(--blue);
+    border: 1px solid rgba(96, 165, 250, 0.12);
   }
 
-  .type-model_request {
-    color: var(--cyan);
+  .type-decision {
+    background: rgba(167, 139, 250, 0.1);
+    color: var(--purple);
+    border: 1px solid rgba(167, 139, 250, 0.12);
   }
 
   .type-guardrail {
-    color: var(--amber);
+    background: rgba(251, 191, 36, 0.08);
+    color: #FBBF24;
+    border: 1px solid rgba(251, 191, 36, 0.1);
   }
 
   .type-error {
+    background: rgba(248, 113, 113, 0.1);
     color: var(--red);
+    border: 1px solid rgba(248, 113, 113, 0.12);
   }
 
-  .prompt-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .prompt-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    background: var(--bg-secondary);
-    border-radius: 6px;
-  }
-
-  .text-dim {
-    color: var(--dim);
-    font-size: 0.82rem;
-  }
-
-  .empty-state {
-    text-align: center;
-    color: var(--dim);
-    padding: 20px;
-  }
-
-  .error-text {
-    color: var(--red);
-  }
-
-  .mono {
-    font-family: "SF Mono", "Fira Code", monospace;
-    font-size: 0.82em;
-    word-break: break-all;
-  }
-
-  .session-name {
-    font-family: "SF Mono", "Fira Code", monospace;
-    font-size: 0.78rem;
+  .type-model_request {
+    background: rgba(52, 211, 153, 0.08);
+    color: var(--green);
+    border: 1px solid rgba(52, 211, 153, 0.1);
   }
 
   .btn {
@@ -675,21 +742,24 @@
     align-items: center;
     gap: 6px;
     padding: 8px 16px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-alt);
     color: var(--text);
     cursor: pointer;
-    font-size: 0.82rem;
-    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    font-family: var(--font);
     transition: all var(--transition);
-    text-decoration: none;
     white-space: nowrap;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   .btn:hover {
-    border-color: var(--cyan);
+    border-color: rgba(255, 255, 255, 0.1);
     color: var(--text-bright);
+    background: rgba(255, 255, 255, 0.05);
   }
 
   .btn:disabled {
@@ -697,21 +767,60 @@
     cursor: not-allowed;
   }
 
+  .btn-ghost {
+    background: none;
+    border-color: transparent;
+    color: var(--dim);
+  }
+
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+  }
+
   .btn-primary {
-    border-color: var(--cyan);
-    color: var(--cyan);
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: var(--amber-text);
   }
 
-  .btn-primary:hover:not(:disabled) {
-    background: rgba(57, 210, 192, 0.08);
+  .btn-primary:hover {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: rgba(245, 158, 11, 0.3);
   }
 
-  .btn-sm {
-    padding: 4px 10px;
-    font-size: 0.75rem;
+  .btn-primary:disabled {
+    background: rgba(245, 158, 11, 0.05);
+    border-color: rgba(245, 158, 11, 0.08);
   }
 
-  @media (max-width: 768px) {
+  .empty-state {
+    text-align: center;
+    color: var(--dim);
+    padding: 32px 20px;
+    font-size: 0.82rem;
+  }
+
+  .empty-pulse {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.04);
+    border-top-color: var(--amber);
+    animation: spin 1s linear infinite;
+    margin: 0 auto 8px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 800px) {
     .compliance-grid {
       grid-template-columns: 1fr;
     }

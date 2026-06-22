@@ -54,6 +54,24 @@ htmlcov/
 node_modules/
 
 # Database
+audit.db
+audit.db-shm
 *.db-journal
 *.db-wal
+test.db
 pg_embedded/
+
+# Audit logs (auto-generated)
+audit_logs/
+
+# Temp development files
+llm_proxy.py
+hermes_audit_bridge.py
+demo_hermes_integration.py
+
+# Certificate directories
+.certs/
+
+# Hermes temp files
+.hermes-tmp*
+*.hermes-tmp*

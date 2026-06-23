@@ -16,7 +16,7 @@ import re
 import pytest
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
-CHARTS_DIR = PROJECT_ROOT / "deploy" / "charts" / "agent-audit"
+CHARTS_DIR = PROJECT_ROOT / "deploy" / "charts" / "agent-seal"
 TEMPLATES_DIR = CHARTS_DIR / "templates"
 
 
@@ -54,8 +54,8 @@ class TestHelpersTpl:
         assert (TEMPLATES_DIR / "_helpers.tpl").exists()
 
     def test_dburi_defined(self, helpers_content):
-        """agent-audit.dbUrl template must be defined."""
-        assert 'define "agent-audit.dbUrl"' in helpers_content
+        """agent-seal.dbUrl template must be defined."""
+        assert 'define "agent-seal.dbUrl"' in helpers_content
 
     def _parse_go_template_args(self, args_text: str) -> list[str]:
         """Parse Go template printf arguments respecting nested parens and quotes."""
@@ -187,16 +187,16 @@ class TestHelpersTpl:
     def test_all_helper_templates_defined(self, helpers_content):
         """All expected helper templates must be defined."""
         expected_templates = [
-            "agent-audit.name",
-            "agent-audit.fullname",
-            "agent-audit.chart",
-            "agent-audit.labels",
-            "agent-audit.selectorLabels",
-            "agent-audit.serviceAccountName",
-            "agent-audit.dbUrl",
-            "agent-audit.redisUri",
-            "agent-audit.image",
-            "agent-audit.apiKeysString",
+            "agent-seal.name",
+            "agent-seal.fullname",
+            "agent-seal.chart",
+            "agent-seal.labels",
+            "agent-seal.selectorLabels",
+            "agent-seal.serviceAccountName",
+            "agent-seal.dbUrl",
+            "agent-seal.redisUri",
+            "agent-seal.image",
+            "agent-seal.apiKeysString",
         ]
         for tmpl in expected_templates:
             assert f'define "{tmpl}"' in helpers_content, (
@@ -226,7 +226,7 @@ class TestNotesTxt:
         assert "POSTGRES_PASSWORD" in notes_content or "postgresql.auth.password" in notes_content
 
     def test_secret_key_warning_exists(self, notes_content):
-        """NOTES.txt must warn when AGENT_AUDIT_SECRET_KEY is empty."""
+        """NOTES.txt must warn when AGENT_SEAL_SECRET_KEY is empty."""
         assert "SECRET_KEY" in notes_content or "secretKey" in notes_content
 
     def test_health_check_instruction(self, notes_content):
@@ -349,7 +349,7 @@ class TestEnvExample:
         assert (PROJECT_ROOT / ".env.example").exists()
 
     def test_secret_key_is_placeholder(self, env_content):
-        """AGENT_AUDIT_SECRET_KEY must use a placeholder."""
+        """AGENT_SEAL_SECRET_KEY must use a placeholder."""
         assert (
             "REPLACE_ME" in env_content
             or "CHANGE_THIS" in env_content
@@ -416,9 +416,9 @@ class TestDockerCompose:
                 assert "localhost" in line, "CORS_ORIGINS should default to http://localhost"
 
     def test_db_url_has_masked_password(self, compose_content):
-        """AGENT_AUDIT_DB_URL must have masked password (*** or placeholder)."""
-        assert "AGENT_AUDIT_DB_URL" in compose_content
-        lines_with_url = [line for line in compose_content.splitlines() if "AGENT_AUDIT_DB_URL" in line]
+        """AGENT_SEAL_DB_URL must have masked password (*** or placeholder)."""
+        assert "AGENT_SEAL_DB_URL" in compose_content
+        lines_with_url = [line for line in compose_content.splitlines() if "AGENT_SEAL_DB_URL" in line]
         assert len(lines_with_url) > 0
 
         for line in lines_with_url:
@@ -446,8 +446,8 @@ class TestDockerCompose:
             assert f"{svc}:" in compose_content
 
     def test_secret_key_empty_default(self, compose_content):
-        """AGENT_AUDIT_SECRET_KEY should have empty default."""
-        assert "AGENT_AUDIT_SECRET_KEY" in compose_content
+        """AGENT_SEAL_SECRET_KEY should have empty default."""
+        assert "AGENT_SEAL_SECRET_KEY" in compose_content
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -561,11 +561,11 @@ class TestHelmSecretTemplate:
 
     def test_db_url_from_helpers(self, secret_content):
         """Secret template must use the dbUrl helper."""
-        assert "agent-audit.dbUrl" in secret_content
+        assert "agent-seal.dbUrl" in secret_content
 
     def test_redis_uri_from_helpers(self, secret_content):
         """Secret template must use the redisUri helper."""
-        assert "agent-audit.redisUri" in secret_content
+        assert "agent-seal.redisUri" in secret_content
 
     def test_secret_key_from_values(self, secret_content):
         """Secret template must reference config.secretKey."""

@@ -30,7 +30,7 @@ FAKE_REPORT = """# EU AI Act Compliance Report — Article 12 Record-Keeping
 | Agent ID | `test-agent` |
 | Total Events Logged | 50 |
 
-*This report was generated automatically by agent-audit v1.0.0.*
+*This report was generated automatically by agent-seal v1.0.0.*
 """
 
 
@@ -40,7 +40,7 @@ def client():
 
     Patching is done inside each test for fine-grained control.
     """
-    from agent_audit.server.routes.compliance import router
+    from agent_seal.server.routes.compliance import router
 
     app = FastAPI()
     app.include_router(router)
@@ -58,7 +58,7 @@ class TestGenerateReport:
     def test_generate_markdown(self, client):
         """Default format returns markdown plain text."""
         with patch(
-            "agent_audit.server.routes.compliance.generate_eu_ai_report",
+            "agent_seal.server.routes.compliance.generate_eu_ai_report",
             return_value=FAKE_REPORT,
         ):
             response = client.post(
@@ -73,7 +73,7 @@ class TestGenerateReport:
     def test_generate_json_format(self, client):
         """format='json' returns a JSON wrapper with report field."""
         with patch(
-            "agent_audit.server.routes.compliance.generate_eu_ai_report",
+            "agent_seal.server.routes.compliance.generate_eu_ai_report",
             return_value=FAKE_REPORT,
         ):
             response = client.post(
@@ -91,7 +91,7 @@ class TestGenerateReport:
     def test_generate_caches_report(self, client):
         """After POST, the report is cached for GET retrieval."""
         with patch(
-            "agent_audit.server.routes.compliance.generate_eu_ai_report",
+            "agent_seal.server.routes.compliance.generate_eu_ai_report",
             return_value=FAKE_REPORT,
         ):
             response = client.post(
@@ -107,7 +107,7 @@ class TestGenerateReport:
     def test_generate_separate_cache_keys(self, client):
         """Different agent_ids produce separate cache entries."""
         with patch(
-            "agent_audit.server.routes.compliance.generate_eu_ai_report",
+            "agent_seal.server.routes.compliance.generate_eu_ai_report",
             return_value=FAKE_REPORT,
         ):
             resp_a = client.post(
@@ -128,7 +128,7 @@ class TestGenerateReport:
     def test_generate_error_handling(self, client):
         """When generate_eu_ai_report raises, returns 500 with error detail."""
         with patch(
-            "agent_audit.server.routes.compliance.generate_eu_ai_report",
+            "agent_seal.server.routes.compliance.generate_eu_ai_report",
             side_effect=RuntimeError("Database connection lost"),
         ):
             response = client.post(
@@ -151,7 +151,7 @@ class TestGetReport:
         """Retrieve a report that was previously generated."""
         # Populate the cache by posting first
         with patch(
-            "agent_audit.server.routes.compliance.generate_eu_ai_report",
+            "agent_seal.server.routes.compliance.generate_eu_ai_report",
             return_value=FAKE_REPORT,
         ):
             client.post("/api/v1/compliance/report", json={"agent_id": "test-agent"})
@@ -173,7 +173,7 @@ class TestGetReport:
     def test_get_after_multiple_generations(self, client):
         """Last generated report per agent is returned by GET."""
         with patch(
-            "agent_audit.server.routes.compliance.generate_eu_ai_report",
+            "agent_seal.server.routes.compliance.generate_eu_ai_report",
             return_value=FAKE_REPORT,
         ):
             client.post("/api/v1/compliance/report", json={"agent_id": "test-agent"})

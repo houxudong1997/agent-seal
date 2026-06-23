@@ -29,7 +29,7 @@ class TestCryptoVerifyPrecision:
 
     def test_valid_signature_returns_true(self):
         """Normal path: valid signature is accepted."""
-        from agent_audit.core.crypto import Signer, Verifier, generate_key_pair
+        from agent_seal.core.crypto import Signer, Verifier, generate_key_pair
 
         private, public = generate_key_pair()
         signer = Signer(private)
@@ -40,7 +40,7 @@ class TestCryptoVerifyPrecision:
 
     def test_tampered_data_returns_false_via_invalid_signature(self):
         """Tampered data hits InvalidSignature → returns False."""
-        from agent_audit.core.crypto import Signer, Verifier, generate_key_pair
+        from agent_seal.core.crypto import Signer, Verifier, generate_key_pair
 
         private, public = generate_key_pair()
         signer = Signer(private)
@@ -52,7 +52,7 @@ class TestCryptoVerifyPrecision:
 
     def test_bad_base64_returns_false_via_value_error(self):
         """Invalid base64 hits ValueError → returns False."""
-        from agent_audit.core.crypto import Verifier, generate_key_pair
+        from agent_seal.core.crypto import Verifier, generate_key_pair
 
         _, public = generate_key_pair()
         verifier = Verifier(public)
@@ -62,7 +62,7 @@ class TestCryptoVerifyPrecision:
 
     def test_none_signature_returns_false_via_type_error(self):
         """None signature hits TypeError → returns False."""
-        from agent_audit.core.crypto import Verifier, generate_key_pair
+        from agent_seal.core.crypto import Verifier, generate_key_pair
 
         _, public = generate_key_pair()
         verifier = Verifier(public)
@@ -72,7 +72,7 @@ class TestCryptoVerifyPrecision:
 
     def test_empty_signature_returns_false_via_value_error(self):
         """Empty signature hits ValueError → returns False."""
-        from agent_audit.core.crypto import Verifier, generate_key_pair
+        from agent_seal.core.crypto import Verifier, generate_key_pair
 
         _, public = generate_key_pair()
         verifier = Verifier(public)
@@ -82,7 +82,7 @@ class TestCryptoVerifyPrecision:
 
     def test_verify_event_tampered_hash_returns_false(self):
         """Tampered event hash returns False."""
-        from agent_audit.core.crypto import Signer, Verifier, generate_key_pair
+        from agent_seal.core.crypto import Signer, Verifier, generate_key_pair
 
         private, public = generate_key_pair()
         signer = Signer(private)
@@ -93,7 +93,7 @@ class TestCryptoVerifyPrecision:
 
     def test_verify_event_bad_signature_format_returns_false(self):
         """Malformed event signature returns False."""
-        from agent_audit.core.crypto import Verifier, generate_key_pair
+        from agent_seal.core.crypto import Verifier, generate_key_pair
 
         _, public = generate_key_pair()
         verifier = Verifier(public)
@@ -103,7 +103,7 @@ class TestCryptoVerifyPrecision:
 
     def test_save_private_key_empty_password_raises_value_error(self):
         """save_private_key with empty password raises ValueError."""
-        from agent_audit.core.crypto import generate_key_pair, save_private_key
+        from agent_seal.core.crypto import generate_key_pair, save_private_key
 
         private, _ = generate_key_pair()
         with pytest.raises(ValueError, match="password must not be empty"):
@@ -115,7 +115,7 @@ class TestCryptoNoOverbroadException:
 
     def test_no_bare_except_in_source(self):
         """Scan crypto.py for forbidden patterns (fail-fast)."""
-        source = Path(__file__).resolve().parent.parent / "agent_audit" / "core" / "crypto.py"
+        source = Path(__file__).resolve().parent.parent / "agent_seal" / "core" / "crypto.py"
         text = source.read_text()
 
         # The old code had 'except (InvalidSignature, Exception):'
@@ -140,7 +140,7 @@ class TestEvidenceExporterExceptionHandling:
 
     def test_check_integrity_logs_and_returns_false_on_failure(self, caplog):
         """_check_integrity catches exception, logs it, returns False."""
-        from agent_audit.evidence import EvidenceExporter
+        from agent_seal.evidence import EvidenceExporter
 
         engine = MagicMock()
         engine.verify.side_effect = ValueError("DB integrity check failed")
@@ -155,7 +155,7 @@ class TestEvidenceExporterExceptionHandling:
 
     def test_verify_bundle_not_found_returns_fail(self):
         """Missing bundle path returns FAIL with reason."""
-        from agent_audit.evidence import EvidenceExporter
+        from agent_seal.evidence import EvidenceExporter
 
         engine = MagicMock()
         registry = MagicMock()
@@ -167,7 +167,7 @@ class TestEvidenceExporterExceptionHandling:
 
     def test_verify_bundle_corrupt_zip_returns_fail(self, tmp_path):
         """Invalid ZIP file returns FAIL with corrupt reason."""
-        from agent_audit.evidence import EvidenceExporter
+        from agent_seal.evidence import EvidenceExporter
 
         bad_zip = tmp_path / "corrupt.zip"
         bad_zip.write_text("this is not a zip file")
@@ -182,7 +182,7 @@ class TestEvidenceExporterExceptionHandling:
 
     def test_verify_bundle_missing_json_keys_returns_fail(self, tmp_path):
         """ZIP without metadata.json returns FAIL."""
-        from agent_audit.evidence import EvidenceExporter
+        from agent_seal.evidence import EvidenceExporter
 
         bad_zip = tmp_path / "missing-meta.zip"
         with zipfile.ZipFile(bad_zip, "w") as zf:
@@ -197,13 +197,13 @@ class TestEvidenceExporterExceptionHandling:
 
     def test_verify_bundle_valid_structure_but_bad_hash(self, tmp_path):
         """ZIP with valid structure but hash mismatch returns FAIL."""
-        from agent_audit.core.storage import AuditEngine
-        from agent_audit.evidence import EvidenceExporter
-        from agent_audit.prompt_version import PromptRegistry
+        from agent_seal.core.storage import AuditEngine
+        from agent_seal.evidence import EvidenceExporter
+        from agent_seal.prompt_version import PromptRegistry
 
         zipp = tmp_path / "bundle.zip"
         with zipfile.ZipFile(zipp, "w") as zf:
-            zf.writestr("metadata.json", json.dumps({"tool": "agent-audit v1.0.0"}))
+            zf.writestr("metadata.json", json.dumps({"tool": "agent-seal v1.0.0"}))
             zf.writestr(
                 "events.json", json.dumps([{"event_id": "1", "hash": "aaa", "prev_hash": ""}]))
             zf.writestr(
@@ -235,7 +235,7 @@ class TestAuditSpanProcessorExceptionSafety:
 
     def test_on_end_swallows_exception_from_process_span(self):
         """on_end catches any exception from _process_span without raising."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         proc = AuditSpanProcessor()
 
@@ -245,7 +245,7 @@ class TestAuditSpanProcessorExceptionSafety:
 
     def test_on_end_handles_completely_empty_span(self):
         """on_end with empty span does not crash."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         proc = AuditSpanProcessor()
         proc.on_end({})  # empty span
@@ -253,14 +253,14 @@ class TestAuditSpanProcessorExceptionSafety:
 
     def test_on_end_handles_malformed_span_no_attributes(self):
         """on_end with missing attributes does not crash."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         proc = AuditSpanProcessor()
         proc.on_end({"no": "attributes"})
 
     def test_cost_estimation_failure_does_not_block_persist(self):
         """When cost estimation fails, span processing continues."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         engine = MagicMock()
         proc = AuditSpanProcessor(engine=engine, auto_audit=True)
@@ -282,10 +282,10 @@ class TestAuditSpanProcessorExceptionSafety:
         # The span should still be processed even if cost fails
         engine.log.assert_called_once()
 
-    @patch("agent_audit.tracing.openai_instrumentor._persist_llm_call")
+    @patch("agent_seal.tracing.openai_instrumentor._persist_llm_call")
     def test_persist_failure_does_not_block_audit(self, mock_persist):
         """When LLM persist fails, audit trail logging continues."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         mock_persist.side_effect = RuntimeError("DB unavailable")
 
@@ -309,11 +309,11 @@ class TestAuditSpanProcessorExceptionSafety:
         # Audit trail still called despite persist failure
         engine.log.assert_called_once()
 
-    @patch("agent_audit.tracing.openai_instrumentor._persist_llm_call", side_effect=RuntimeError)
-    @patch("agent_audit.tracing.cost.estimate_cost", side_effect=ValueError("bad model"))
+    @patch("agent_seal.tracing.openai_instrumentor._persist_llm_call", side_effect=RuntimeError)
+    @patch("agent_seal.tracing.cost.estimate_cost", side_effect=ValueError("bad model"))
     def test_all_internal_failures_still_do_not_crash(self, mock_cost, mock_persist):
         """Multiple simultaneous failures don't crash on_end."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         engine = MagicMock()
         proc = AuditSpanProcessor(engine=engine, auto_audit=True, auto_cost=True)
@@ -337,28 +337,28 @@ class TestAuditSpanProcessorExceptionSafety:
 
     def test_get_attributes_empty_span_returns_dict(self):
         """_get_attributes handles spans with no structure."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         assert AuditSpanProcessor._get_attributes({}) == {}
         assert AuditSpanProcessor._get_attributes(None) == {}
 
     def test_get_attributes_from_object_without_attributes(self):
         """_get_attributes handles objects without attributes."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         obj = object()
         assert AuditSpanProcessor._get_attributes(obj) == {}
 
     def test_get_trace_id_from_dict(self):
         """_get_trace_id extracts trace_id from dict spans."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         span = {"trace_id": "abc123"}
         assert AuditSpanProcessor._get_trace_id(span) == "abc123"
 
     def test_get_trace_id_from_object_without_context(self):
         """_get_trace_id returns empty string when span has no context."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         obj = MagicMock()
         # No get_span_context method
@@ -367,7 +367,7 @@ class TestAuditSpanProcessorExceptionSafety:
 
     def test_get_span_id_returns_empty_on_exception(self):
         """_get_span_id catches exceptions and returns empty string."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         span = MagicMock()
         span.get_span_context.side_effect = TypeError("not a span")
@@ -375,14 +375,14 @@ class TestAuditSpanProcessorExceptionSafety:
 
     def test_get_parent_span_id_from_dict(self):
         """_get_parent_span_id extracts parent_span_id from dict spans."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         span = {"parent_span_id": "parent123"}
         assert AuditSpanProcessor._get_parent_span_id(span) == "parent123"
 
     def test_get_parent_span_id_from_object_with_parent(self):
         """_get_parent_span_id extracts from object with parent context."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         parent_ctx = MagicMock()
         parent_ctx.get_span_context.return_value = MagicMock()
@@ -396,7 +396,7 @@ class TestAuditSpanProcessorExceptionSafety:
 
     def test_get_parent_span_id_no_parent(self):
         """_get_parent_span_id returns empty when there's no parent."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         span = MagicMock()
         span.parent = None
@@ -404,19 +404,19 @@ class TestAuditSpanProcessorExceptionSafety:
 
     def test_shutdown_is_noop(self):
         """shutdown does not raise."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         AuditSpanProcessor().shutdown()
 
     def test_force_flush_returns_true(self):
         """force_flush returns True."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         assert AuditSpanProcessor().force_flush() is True
 
     def test_create_span_processor_wires_engine(self):
         """create_span_processor returns a properly wired AuditSpanProcessor."""
-        from agent_audit.tracing.opentelemetry import create_span_processor
+        from agent_seal.tracing.opentelemetry import create_span_processor
 
         engine = MagicMock()
         proc = create_span_processor(engine, auto_audit=True, auto_cost=False)
@@ -426,7 +426,7 @@ class TestAuditSpanProcessorExceptionSafety:
 
     def test_auto_audit_false_skips_audit_log(self):
         """When auto_audit is False, engine.log is not called."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         engine = MagicMock()
         proc = AuditSpanProcessor(engine=engine, auto_audit=False)
@@ -451,10 +451,10 @@ class TestVersionConsistency:
     PACKAGE_VERSION = "1.0.0"
 
     def test_init_version_matches(self):
-        """agent_audit.__init__.__version__ is 1.0.0."""
-        import agent_audit
+        """agent_seal.__init__.__version__ is 1.0.0."""
+        import agent_seal
 
-        assert agent_audit.__version__ == self.PACKAGE_VERSION
+        assert agent_seal.__version__ == self.PACKAGE_VERSION
 
     def test_setup_version_matches(self):
         """setup.py version is 1.0.0."""
@@ -467,14 +467,14 @@ class TestVersionConsistency:
 
     def test_evidence_tool_version_matches(self):
         """evidence.py tool string references v1.0.0."""
-        src_path = Path(__file__).resolve().parent.parent / "agent_audit" / "evidence.py"
+        src_path = Path(__file__).resolve().parent.parent / "agent_seal" / "evidence.py"
         text = src_path.read_text()
         assert f"v{self.PACKAGE_VERSION}" in text
 
     def test_spa_version_tag_matches(self):
         """SPA version tag is v1.0.0."""
         spa_path = (
-            Path(__file__).resolve().parent.parent / "agent_audit" / "spa" / "src" / "App.svelte"
+            Path(__file__).resolve().parent.parent / "agent_seal" / "spa" / "src" / "App.svelte"
         )
         if spa_path.exists():
             text = spa_path.read_text()

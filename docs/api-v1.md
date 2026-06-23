@@ -1,6 +1,6 @@
-# agent-audit REST API v1.0
+# agent-seal REST API v1.0
 
-> Complete reference for the agent-audit REST API. Base URL: `http://localhost:8081`
+> Complete reference for the agent-seal REST API. Base URL: `http://localhost:8081`
 
 ---
 
@@ -49,10 +49,10 @@
 
 ```bash
 # Start the server
-agent-audit serve
+agent-seal serve
 
 # Or with uvicorn directly
-uvicorn agent_audit.server.app:app --host 0.0.0.0 --port 8081
+uvicorn agent_seal.server.app:app --host 0.0.0.0 --port 8081
 
 # Interactive API docs
 open http://localhost:8081/docs
@@ -64,7 +64,7 @@ All API responses are JSON unless noted otherwise. The FastAPI server also serve
 
 ## 2. Authentication
 
-Bearer token authentication via the `Authorization` header. Configured via `AGENT_AUDIT_API_KEYS` in `.env`.
+Bearer token authentication via the `Authorization` header. Configured via `AGENT_SEAL_API_KEYS` in `.env`.
 
 **If no API keys are configured, the API is open access** (dev mode).
 
@@ -73,10 +73,10 @@ Bearer token authentication via the `Authorization` header. Configured via `AGEN
 
 ```bash
 # .env — comma-separated Bearer tokens
-AGENT_AUDIT_API_KEYS=prod-key-abc123,prod-key-def456
+AGENT_SEAL_API_KEYS=prod-key-abc123,prod-key-def456
 
 # Empty = open access (dev only)
-AGENT_AUDIT_API_KEYS=
+AGENT_SEAL_API_KEYS=
 ```
 
 **Authenticated request**:
@@ -91,7 +91,7 @@ curl -H "Authorization: Bearer ***" http://localhost:8081/api/v1/log
 {"detail": "Not authenticated"}
 ```
 
-> **Note**: The legacy HTTP server (`api.py`) returns `{"error": "unauthorized"}` with `401`. The FastAPI server returns `{"detail": "Not authenticated"}` with `401`. Both use the same `AGENT_AUDIT_API_KEYS` config.
+> **Note**: The legacy HTTP server (`api.py`) returns `{"error": "unauthorized"}` with `401`. The FastAPI server returns `{"detail": "Not authenticated"}` with `401`. Both use the same `AGENT_SEAL_API_KEYS` config.
 
 ---
 
@@ -169,7 +169,7 @@ audit_events_total 42
 # TYPE audit_sessions_active gauge
 audit_sessions_active 3
 
-# HELP audit_uptime_seconds Seconds since agent-audit started
+# HELP audit_uptime_seconds Seconds since agent-seal started
 # TYPE audit_uptime_seconds gauge
 audit_uptime_seconds 378
 
@@ -249,7 +249,7 @@ curl http://localhost:8081/api/v1/stats
 
 Record a new audit event. The event is appended to its session's SHA-256 hash chain and persisted to the storage backend.
 
-**Authentication**: Required if `AGENT_AUDIT_API_KEYS` is set.
+**Authentication**: Required if `AGENT_SEAL_API_KEYS` is set.
 
 **Request**:
 
@@ -630,7 +630,7 @@ curl http://localhost:8081/api/v1/llm/stats
 | `by_model` | object | Breakdown by model: calls, tokens, cost |
 | `avg_latency_ms` | float | Average latency across all calls |
 
-> **Note**: Cost estimates are per the pricing tables in `tracing/cost.py` for OpenAI, Anthropic, and DeepSeek models. Only available when `AGENT_AUDIT_AUTO_TRACE=1` is set.
+> **Note**: Cost estimates are per the pricing tables in `tracing/cost.py` for OpenAI, Anthropic, and DeepSeek models. Only available when `AGENT_SEAL_AUTO_TRACE=1` is set.
 
 ---
 
@@ -658,10 +658,10 @@ curl http://localhost:8081/api/v1/llm/status
     "capture_response": true
   },
   "env_config": {
-    "AGENT_AUDIT_AUTO_TRACE": true,
-    "AGENT_AUDIT_TRACE_PII_REDACT": false,
-    "AGENT_AUDIT_TRACE_MAX_LEN": 4000,
-    "AGENT_AUDIT_TRACE_COST_MODEL": "openai"
+    "AGENT_SEAL_AUTO_TRACE": true,
+    "AGENT_SEAL_TRACE_PII_REDACT": false,
+    "AGENT_SEAL_TRACE_MAX_LEN": 4000,
+    "AGENT_SEAL_TRACE_COST_MODEL": "openai"
   }
 }
 ```
@@ -694,7 +694,7 @@ curl -X POST http://localhost:8081/api/v1/llm/enable
 
 ### `POST /api/v1/llm/disable`
 
-Disable LLM auto-tracing. Note: monkey-patching cannot be fully reversed at runtime. Set `AGENT_AUDIT_AUTO_TRACE=0` in `.env` and restart the server for a complete disable.
+Disable LLM auto-tracing. Note: monkey-patching cannot be fully reversed at runtime. Set `AGENT_SEAL_AUTO_TRACE=0` in `.env` and restart the server for a complete disable.
 
 **Request**:
 
@@ -707,7 +707,7 @@ curl -X POST http://localhost:8081/api/v1/llm/disable
 ```json
 {
   "status": "info",
-  "message": "LLM tracing cannot be fully disabled at runtime after monkey-patching. Set AGENT_AUDIT_AUTO_TRACE=0 in .env and restart the server."
+  "message": "LLM tracing cannot be fully disabled at runtime after monkey-patching. Set AGENT_SEAL_AUTO_TRACE=0 in .env and restart the server."
 }
 ```
 
@@ -715,7 +715,7 @@ curl -X POST http://localhost:8081/api/v1/llm/disable
 
 ### `POST /api/v1/llm/log`
 
-Record an LLM call manually. Allows external systems to push LLM call telemetry into agent-audit for traceability and cost tracking. Auto-generates `trace_id` and `span_id` if not provided.
+Record an LLM call manually. Allows external systems to push LLM call telemetry into agent-seal for traceability and cost tracking. Auto-generates `trace_id` and `span_id` if not provided.
 
 **Request**:
 
@@ -827,7 +827,7 @@ curl http://localhost:8081/api/v1/llm/traces/a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
 
 Generate an EU AI Act Article 12 compliance report for an agent. Includes agent identity, event timeline, prompt version history, chain integrity proof, policy evaluation log, and evidence bundle export.
 
-**Authentication**: Required if `AGENT_AUDIT_API_KEYS` is set.
+**Authentication**: Required if `AGENT_SEAL_API_KEYS` is set.
 
 **Request**:
 
@@ -897,7 +897,7 @@ Export a signed, tamper-evident evidence bundle (.zip) containing the complete a
 
 Compliant with: EU AI Act Article 12, SOC 2, HIPAA audit trail requirements.
 
-**Authentication**: Required if `AGENT_AUDIT_API_KEYS` is set.
+**Authentication**: Required if `AGENT_SEAL_API_KEYS` is set.
 
 **Request**:
 
@@ -914,7 +914,7 @@ curl -X POST http://localhost:8081/api/v1/evidence/export \
 |---|---|---|---|---|
 | `agent_id` | string | Yes | — | Agent whose data to export |
 | `format` | string | No | `"zip"` | Bundle format (`"zip"`) |
-| `sign` | bool | No | `false` | If `true`, signs bundle with HMAC-SHA256 using `AGENT_AUDIT_SECRET_KEY` |
+| `sign` | bool | No | `false` | If `true`, signs bundle with HMAC-SHA256 using `AGENT_SEAL_SECRET_KEY` |
 | `session_filter` | array | No | — | Optional list of session IDs to include (all sessions if omitted) |
 
 **Response** `200 OK` — binary `.zip` download:
@@ -943,7 +943,7 @@ Content-Disposition: attachment; filename="evidence-refund-bot-20260622.zip"
 **Verification (offline)**:
 
 ```bash
-agent-audit verify-bundle evidence-refund-bot.zip
+agent-seal verify-bundle evidence-refund-bot.zip
 ```
 
 > The `SHA-256` bundle hash enables independent auditors to detect any tampering without access to the live system.
@@ -970,7 +970,7 @@ curl http://localhost:8081/api/v1/admin/status
   "uptime_seconds": 8423,
   "storage": {
     "backend": "sqlite",
-    "uri": "sqlite:///./agent_audit.db",
+    "uri": "sqlite:///./agent_seal.db",
     "size_bytes": 458752
   },
   "api_keys_configured": true,
@@ -988,9 +988,9 @@ curl http://localhost:8081/api/v1/admin/status
 | `storage.backend` | string | Active storage backend (`jsonl`, `sqlite`, `postgresql`, `postgresql-orm`) |
 | `storage.uri` | string | Database connection URI (credentials masked) |
 | `storage.size_bytes` | int | Estimated storage footprint |
-| `api_keys_configured` | bool | `true` if `AGENT_AUDIT_API_KEYS` is set |
-| `auto_trace_enabled` | bool | `true` if `AGENT_AUDIT_AUTO_TRACE=1` |
-| `cors_origins` | array | Allowed CORS origins from `AGENT_AUDIT_CORS_ORIGINS` |
+| `api_keys_configured` | bool | `true` if `AGENT_SEAL_API_KEYS` is set |
+| `auto_trace_enabled` | bool | `true` if `AGENT_SEAL_AUTO_TRACE=1` |
+| `cors_origins` | array | Allowed CORS origins from `AGENT_SEAL_CORS_ORIGINS` |
 
 ---
 
@@ -1000,8 +1000,8 @@ curl http://localhost:8081/api/v1/admin/status
 
 Serves the SPA dashboard. Uses the first available template:
 
-1. `agent_audit/server/static/index.html` — Svelte SPA build
-2. `agent_audit/server/templates/index.html` — self-contained HTML dashboard with SSE streaming, tab navigation, and REST API integration
+1. `agent_seal/server/static/index.html` — Svelte SPA build
+2. `agent_seal/server/templates/index.html` — self-contained HTML dashboard with SSE streaming, tab navigation, and REST API integration
 3. Fallback: inline HTML page with API endpoint listing
 
 **Request**:

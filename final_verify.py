@@ -3,12 +3,12 @@ import sys
 sys.path.insert(0, ".")
 
 print("1. Importing FastAPI app...")
-from agent_audit.server.app import app, get_engine, _safe_integrity
+from agent_seal.server.app import app, get_engine, _safe_integrity
 print(f"   OK: app.title={app.title}, {len(app.routes)} routes")
 
 print("2. Importing engine...")
-from agent_audit.core.storage import AuditEngine
-from agent_audit.config import config
+from agent_seal.core.storage import AuditEngine
+from agent_seal.config import config
 
 print("3. Testing engine...")
 engine = get_engine()

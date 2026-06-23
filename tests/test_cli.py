@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agent_audit.core.chain import ChainEvent
+from agent_seal.core.chain import ChainEvent
 
 
 # ═══════════════════════════ FIXTURES ═══════════════════════════
@@ -25,7 +25,7 @@ from agent_audit.core.chain import ChainEvent
 @pytest.fixture
 def mock_engine():
     """Mock AuditEngine so no real store backend is created."""
-    with patch("agent_audit.cli.AuditEngine") as m:
+    with patch("agent_seal.cli.AuditEngine") as m:
         instance = m.return_value
         instance.store_uri = "jsonl:///tmp/test-logs"
 
@@ -76,7 +76,7 @@ def mock_engine():
 @pytest.fixture
 def mock_registry():
     """Mock PromptRegistry so no real disk I/O happens."""
-    with patch("agent_audit.cli.PromptRegistry") as m:
+    with patch("agent_seal.cli.PromptRegistry") as m:
         instance = m.return_value
         instance.audit_report.return_value = {
             "agent_id": "default-agent",
@@ -111,7 +111,7 @@ class TestCmdVerify:
 
     def test_verify_passes(self, mock_engine, capsys):
         """Normal path: engine.verify() succeeds, prints success."""
-        from agent_audit.cli import cmd_verify
+        from agent_seal.cli import cmd_verify
 
         cmd_verify()
         out, err = capsys.readouterr()
@@ -123,7 +123,7 @@ class TestCmdVerify:
         """Error path: engine.verify() raises ValueError, exits with code 1."""
         mock_engine.return_value.verify.side_effect = ValueError("Chain broken at event 5")
 
-        from agent_audit.cli import cmd_verify
+        from agent_seal.cli import cmd_verify
 
         with pytest.raises(SystemExit) as exc_info:
             cmd_verify()
@@ -135,7 +135,7 @@ class TestCmdVerify:
 
     def test_verify_calls_engine(self, mock_engine, capsys):
         """verify() calls engine.verify() once."""
-        from agent_audit.cli import cmd_verify
+        from agent_seal.cli import cmd_verify
 
         cmd_verify()
         mock_engine.return_value.verify.assert_called_once()
@@ -149,7 +149,7 @@ class TestCmdTrail:
 
     def test_trail_with_sessions(self, mock_engine, capsys):
         """Normal path: prints stats and last 3 sessions with events."""
-        from agent_audit.cli import cmd_trail
+        from agent_seal.cli import cmd_trail
 
         cmd_trail()
         out, err = capsys.readouterr()
@@ -171,7 +171,7 @@ class TestCmdTrail:
             "event_types": {},
         }
 
-        from agent_audit.cli import cmd_trail
+        from agent_seal.cli import cmd_trail
 
         cmd_trail()
         out, err = capsys.readouterr()
@@ -182,7 +182,7 @@ class TestCmdTrail:
 
     def test_trail_calls_engine_methods(self, mock_engine, capsys):
         """Verifies the right engine methods are called."""
-        from agent_audit.cli import cmd_trail
+        from agent_seal.cli import cmd_trail
 
         cmd_trail()
         engine = mock_engine.return_value
@@ -198,9 +198,9 @@ class TestCmdReport:
 
     def test_report_default_agent(self, mock_engine, mock_registry, capsys):
         """Default agent with no output path."""
-        test_argv = ["agent-audit", "report"]
+        test_argv = ["agent-seal", "report"]
         with patch.object(sys, "argv", test_argv):
-            from agent_audit.cli import cmd_report
+            from agent_seal.cli import cmd_report
 
             cmd_report()
 
@@ -214,9 +214,9 @@ class TestCmdReport:
 
         Note: cmd_report reads sys.argv[3] for agent_id (argv[2] is unused).
         """
-        test_argv = ["agent-audit", "report", "skip", "my-agent"]
+        test_argv = ["agent-seal", "report", "skip", "my-agent"]
         with patch.object(sys, "argv", test_argv):
-            from agent_audit.cli import cmd_report
+            from agent_seal.cli import cmd_report
 
             cmd_report()
 
@@ -230,9 +230,9 @@ class TestCmdReport:
         Note: cmd_report reads sys.argv[3] for agent_id, sys.argv[4] for output_path.
         """
         report_file = tmp_path / "eu-report.md"
-        test_argv = ["agent-audit", "report", "skip", "default-agent", str(report_file)]
+        test_argv = ["agent-seal", "report", "skip", "default-agent", str(report_file)]
         with patch.object(sys, "argv", test_argv):
-            from agent_audit.cli import cmd_report
+            from agent_seal.cli import cmd_report
 
             cmd_report()
 
@@ -244,11 +244,11 @@ class TestCmdReport:
 
     def test_report_calls_generate(self, mock_engine, mock_registry, capsys):
         """Verifies generate_eu_ai_report is called with correct args."""
-        test_argv = ["agent-audit", "report"]
-        with patch("agent_audit.cli.generate_eu_ai_report") as mock_generate:
+        test_argv = ["agent-seal", "report"]
+        with patch("agent_seal.cli.generate_eu_ai_report") as mock_generate:
             mock_generate.return_value = "mock report output"
             with patch.object(sys, "argv", test_argv):
-                from agent_audit.cli import cmd_report
+                from agent_seal.cli import cmd_report
 
                 cmd_report()
 
@@ -267,9 +267,9 @@ class TestCmdLog:
 
     def test_log_normal(self, mock_engine, capsys):
         """Normal path: logs event and prints event_id + hash."""
-        test_argv = ["agent-audit", "log", "test_type", "my output text"]
+        test_argv = ["agent-seal", "log", "test_type", "my output text"]
         with patch.object(sys, "argv", test_argv):
-            from agent_audit.cli import cmd_log
+            from agent_seal.cli import cmd_log
 
             cmd_log()
 
@@ -284,9 +284,9 @@ class TestCmdLog:
 
         Note: cmd_log reads sys.argv[3] for event_type, sys.argv[4] for output_text.
         """
-        test_argv = ["agent-audit", "log", "skip", "my_type"]
+        test_argv = ["agent-seal", "log", "skip", "my_type"]
         with patch.object(sys, "argv", test_argv):
-            from agent_audit.cli import cmd_log
+            from agent_seal.cli import cmd_log
 
             cmd_log()
 
@@ -296,9 +296,9 @@ class TestCmdLog:
 
     def test_log_missing_args(self, capsys):
         """Missing event_type: prints usage and exits with code 1."""
-        test_argv = ["agent-audit", "log"]
+        test_argv = ["agent-seal", "log"]
         with patch.object(sys, "argv", test_argv):
-            from agent_audit.cli import cmd_log
+            from agent_seal.cli import cmd_log
 
             with pytest.raises(SystemExit) as exc_info:
                 cmd_log()
@@ -313,9 +313,9 @@ class TestCmdLog:
 
         Note: cmd_log reads sys.argv[3] for event_type, sys.argv[4] for output_text.
         """
-        test_argv = ["agent-audit", "log", "skip", "decision", "approved"]
+        test_argv = ["agent-seal", "log", "skip", "decision", "approved"]
         with patch.object(sys, "argv", test_argv):
-            from agent_audit.cli import cmd_log
+            from agent_seal.cli import cmd_log
 
             cmd_log()
 
@@ -337,9 +337,9 @@ class TestMain:
 
     def test_main_verify_dispatch(self, mock_engine, capsys):
         """main() dispatches to cmd_verify when argv[1] == 'verify'."""
-        test_argv = ["agent-audit", "verify"]
+        test_argv = ["agent-seal", "verify"]
         with patch.object(sys, "argv", test_argv):
-            from agent_audit.cli import main
+            from agent_seal.cli import main
 
             main()
         out, err = capsys.readouterr()
@@ -347,9 +347,9 @@ class TestMain:
 
     def test_main_unknown_command(self, capsys):
         """Unknown command exits with code 1 and prints help."""
-        test_argv = ["agent-audit", "nonexistent"]
+        test_argv = ["agent-seal", "nonexistent"]
         with patch.object(sys, "argv", test_argv):
-            from agent_audit.cli import main
+            from agent_seal.cli import main
 
             with pytest.raises(SystemExit) as exc_info:
                 main()
@@ -360,9 +360,9 @@ class TestMain:
 
     def test_main_no_command(self, capsys):
         """No command exits with code 1 and prints help."""
-        test_argv = ["agent-audit"]
+        test_argv = ["agent-seal"]
         with patch.object(sys, "argv", test_argv):
-            from agent_audit.cli import main
+            from agent_seal.cli import main
 
             with pytest.raises(SystemExit) as exc_info:
                 main()

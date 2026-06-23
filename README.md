@@ -1,4 +1,4 @@
-# agent-audit / AI Agent 审计追踪
+# agent-seal / AI Agent 审计追踪
 
 **Tamper-proof audit trail for AI agents / 防篡改的 AI Agent 审计追踪** — three-line integration (zero-code hook, `@observe` decorator, or framework callback). EU AI Act Article 12 ready. / 三行代码即可集成（零代码 Hook、`@observe` 装饰器或框架回调）。已为 EU AI Act 第 12 条做好准备。
 
@@ -6,19 +6,19 @@
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.1.0-blue)](https://pypi.org/project/agent-audit/)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue)](https://pypi.org/project/agent-seal/)
 
-agent-audit records every decision, tool call, and model request an AI agent makes into an immutable, SHA-256 hash-chained log. Each event is cryptographically linked to the previous one — tamper with a single byte and the entire chain breaks, detected instantly on verification. Designed for **EU AI Act Article 12** (record-keeping, effective August 2026), SOC 2, and HIPAA audit requirements.
+agent-seal records every decision, tool call, and model request an AI agent makes into an immutable, SHA-256 hash-chained log. Each event is cryptographically linked to the previous one — tamper with a single byte and the entire chain breaks, detected instantly on verification. Designed for **EU AI Act Article 12** (record-keeping, effective August 2026), SOC 2, and HIPAA audit requirements.
 
-agent-audit 将 AI Agent 的每一次决策、工具调用和模型请求记录到一个不可篡改的、由 SHA-256 哈希链串联的日志中。每个事件都通过密码学方式与前一个事件链接——篡改任意一个字节，整条链就会断裂，验证时即刻被发现。专为 **EU AI Act 第 12 条**（记录保存，2026 年 8 月生效）、SOC 2 和 HIPAA 审计要求而设计。
+agent-seal 将 AI Agent 的每一次决策、工具调用和模型请求记录到一个不可篡改的、由 SHA-256 哈希链串联的日志中。每个事件都通过密码学方式与前一个事件链接——篡改任意一个字节，整条链就会断裂，验证时即刻被发现。专为 **EU AI Act 第 12 条**（记录保存，2026 年 8 月生效）、SOC 2 和 HIPAA 审计要求而设计。
 
 ---
 
 ## Integration Methods / 集成方式 🆕
 
-agent-audit v1.1 offers three integration paths — from zero-code to deep framework hooks. Pick the one that fits your stack.
+agent-seal v1.1 offers three integration paths — from zero-code to deep framework hooks. Pick the one that fits your stack.
 
-agent-audit v1.1 提供三种集成方式——从零代码到深度框架钩子。选择适合你技术栈的方式。
+agent-seal v1.1 提供三种集成方式——从零代码到深度框架钩子。选择适合你技术栈的方式。
 
 | Method / 方式 | Code Required / 代码量 | What It Captures / 捕获内容 | Best For / 适用场景 |
 |--------|:------------:|------------------|----------|
@@ -32,13 +32,13 @@ agent-audit v1.1 提供三种集成方式——从零代码到深度框架钩子
 
 ### 1. Zero-Code (Global Hook) / 零代码（全局 Hook） 🆕
 
-Install agent-audit and start the server. Every Python process on the machine is automatically traced — no code changes.
+Install agent-seal and start the server. Every Python process on the machine is automatically traced — no code changes.
 
-安装 agent-audit 并启动服务。机器上的每个 Python 进程都会被自动追踪——无需任何代码变更。
+安装 agent-seal 并启动服务。机器上的每个 Python 进程都会被自动追踪——无需任何代码变更。
 
 ```bash
-pip install agent-audit
-agent-audit server
+pip install agent-seal
+agent-seal server
 # Dashboard at http://localhost:8081 — all LLM calls appear automatically
 # 控制台地址：http://localhost:8081 — 所有 LLM 调用自动出现
 ```
@@ -54,8 +54,8 @@ Trace any Python function with one decorator. Inputs, outputs, execution time, a
 一行装饰器即可追踪任意 Python 函数。输入、输出、执行时间和嵌套调用树都会被记录到审计追踪中。
 
 ```python
-from agent_audit import observe, set_engine
-from agent_audit.engine import AuditEngine
+from agent_seal import observe, set_engine
+from agent_seal.engine import AuditEngine
 
 engine = AuditEngine("sqlite://audit.db")
 set_engine(engine)
@@ -88,7 +88,7 @@ One line registers a callback handler that audits every LLM call, tool invocatio
 一行代码注册回调处理器，审计每一次 LLM 调用、工具调用、Chain 步骤和 Agent 决策。
 
 ```python
-from agent_audit.hooks.langchain import LangChainAuditHandler
+from agent_seal.hooks.langchain import LangChainAuditHandler
 
 handler = LangChainAuditHandler(agent_id="my-agent")
 
@@ -147,7 +147,7 @@ Native support for the [Hermes Agent](https://hermes-agent.nousresearch.com/docs
 
 - **Policy Engine / 策略引擎** — YAML-based guardrail rules. Block dangerous tool calls before execution. / 基于 YAML 的护栏规则。在危险工具调用执行前将其阻止。
 - **Evidence Bundles / 证据包** — Export signed `.zip` bundles for external auditors with SHA-256 verification. / 导出带签名的 `.zip` 证据包，供外部审计师使用，附带 SHA-256 验证。
-- **EU AI Act Reports / EU AI Act 报告** — Generate Article 12 compliance reports on demand (`agent-audit report <agent>`). / 按需生成第 12 条合规报告（`agent-audit report <agent>`）。
+- **EU AI Act Reports / EU AI Act 报告** — Generate Article 12 compliance reports on demand (`agent-seal report <agent>`). / 按需生成第 12 条合规报告（`agent-seal report <agent>`）。
 - **Prompt Version Tracking / Prompt 版本追踪** — Git-like prompt history with diffs — who changed what, when, and why. / 类 Git 的 Prompt 历史记录，支持差异对比——谁在何时因何原因修改了什么。
 
 ### Observability / 可观测性
@@ -167,26 +167,26 @@ Native support for the [Hermes Agent](https://hermes-agent.nousresearch.com/docs
 ## Installation / 安装
 
 ```bash
-pip install agent-audit
+pip install agent-seal
 ```
 
 With PostgreSQL support / 带 PostgreSQL 支持：
 
 ```bash
-pip install agent-audit[postgresql]
+pip install agent-seal[postgresql]
 ```
 
 Or everything / 或安装全部：
 
 ```bash
-pip install agent-audit[all]
+pip install agent-seal[all]
 ```
 
 ### From source / 从源码安装
 
 ```bash
-git clone https://github.com/user/agent-audit.git
-cd agent-audit
+git clone https://github.com/user/agent-seal.git
+cd agent-seal
 pip install -e .
 ```
 
@@ -206,9 +206,9 @@ SPA 控制台为你的审计追踪提供实时可视性：
 - **Binary/garbled output filtering** — clean display of structured data / **二进制/乱码输出过滤**——结构化数据的清晰展示
 - **SSE live updates** — new events stream in real time, no page refresh / **SSE 实时更新**——新事件实时流式推送，无需刷新页面
 
-Start the dashboard: `agent-audit server` → open `http://localhost:8081`
+Start the dashboard: `agent-seal server` → open `http://localhost:8081`
 
-启动控制台：`agent-audit server` → 打开 `http://localhost:8081`
+启动控制台：`agent-seal server` → 打开 `http://localhost:8081`
 
 ---
 
@@ -252,7 +252,7 @@ Start the dashboard: `agent-audit server` → open `http://localhost:8081`
 ```
 
 ```
-agent_audit/
+agent_seal/
 ├── trail.py              # Hash-chained audit trail (entry point) / 哈希链审计追踪（入口）
 ├── engine.py             # Unified AuditEngine (JSONL/SQLite/PG) / 统一审计引擎
 ├── observe.py            # @observe decorator / @observe 装饰器 🆕
@@ -292,7 +292,7 @@ For detailed architecture see [docs/architecture-v1.md](docs/architecture-v1.md)
 ## CLI Reference / CLI 参考
 
 ```bash
-agent-audit <command> [options]
+agent-seal <command> [options]
 ```
 
 | Command / 命令   | Description / 描述                                    |
@@ -311,8 +311,8 @@ agent-audit <command> [options]
 Start the server / 启动服务：
 
 ```bash
-agent-audit server
-# OR: uvicorn agent_audit.server.app:app --host 0.0.0.0 --port 8081
+agent-seal server
+# OR: uvicorn agent_seal.server.app:app --host 0.0.0.0 --port 8081
 ```
 
 Endpoints / 端点：
@@ -340,24 +340,24 @@ All settings via environment variables (12-Factor App). See `.env.example` for a
 
 | Variable / 变量                          | Default / 默认值           | Description / 描述                             |
 |-----------------------------------|-------------------|-----------------------------------------|
-| `AGENT_AUDIT_DB_URL`              | _(auto-detect)_   | PostgreSQL / SQLite connection string / 数据库连接字符串   |
-| `AGENT_AUDIT_SECRET_KEY`          | _(none)_          | HMAC secret for internal tokens / 内部 Token 的 HMAC 密钥         |
-| `AGENT_AUDIT_STORAGE_BACKEND`     | `auto`            | `jsonl` / `sqlite` / `postgresql`       |
-| `AGENT_AUDIT_AUDIT_DIR`           | `./audit_logs`    | Local directory for JSONL/SQLite / JSONL/SQLite 本地目录       |
-| `AGENT_AUDIT_API_HOST`            | `0.0.0.0`         | API bind address / API 绑定地址                        |
-| `AGENT_AUDIT_API_PORT`            | `8081`            | API port / API 端口                                |
-| `AGENT_AUDIT_API_KEYS`            | _(none)_          | Comma-separated API keys / 逗号分隔的 API 密钥                |
-| `AGENT_AUDIT_CORS_ORIGINS`        | _(none)_          | Comma-separated allowed origins / 逗号分隔的允许来源         |
-| `AGENT_AUDIT_SIGNING_KEY`         | _(none)_          | Ed25519 private key for signing / Ed25519 签名私钥         |
-| `AGENT_AUDIT_ENCRYPTION_KEY`      | _(none)_          | AES-256-GCM encryption key / AES-256-GCM 加密密钥              |
-| `AGENT_AUDIT_AUTO_TRACE`          | `0`               | Auto-trace LLM calls (`1`=on) / 自动追踪 LLM 调用（`1`=开启）           |
-| `AGENT_AUDIT_TRACE_PII_REDACT`    | `0`               | Redact PII in traces (`1`=on) / 追踪中脱敏 PII（`1`=开启）           |
-| `AGENT_AUDIT_LOG_LEVEL`           | `info`            | `debug`, `info`, `warning`              |
-| `AGENT_AUDIT_REDIS_URI`           | _(none)_          | Redis connection for caching / Redis 缓存连接            |
-| `AGENT_AUDIT_SLACK_WEBHOOK`       | _(none)_          | Slack notification webhook / Slack 通知 Webhook              |
-| `AGENT_AUDIT_SMTP_HOST`           | _(none)_          | Email notification SMTP host / 邮件通知 SMTP 主机            |
-| `AGENT_AUDIT_NOTIFY_ON_FAILURE`   | `0`               | Notify on chain integrity failure / 链完整性失败时通知       |
-| `AGENT_AUDIT_EVIDENCE_STORE`      | _(none)_          | External evidence store path / 外部证据存储路径            |
+| `AGENT_SEAL_DB_URL`              | _(auto-detect)_   | PostgreSQL / SQLite connection string / 数据库连接字符串   |
+| `AGENT_SEAL_SECRET_KEY`          | _(none)_          | HMAC secret for internal tokens / 内部 Token 的 HMAC 密钥         |
+| `AGENT_SEAL_STORAGE_BACKEND`     | `auto`            | `jsonl` / `sqlite` / `postgresql`       |
+| `AGENT_SEAL_AUDIT_DIR`           | `./audit_logs`    | Local directory for JSONL/SQLite / JSONL/SQLite 本地目录       |
+| `AGENT_SEAL_API_HOST`            | `0.0.0.0`         | API bind address / API 绑定地址                        |
+| `AGENT_SEAL_API_PORT`            | `8081`            | API port / API 端口                                |
+| `AGENT_SEAL_API_KEYS`            | _(none)_          | Comma-separated API keys / 逗号分隔的 API 密钥                |
+| `AGENT_SEAL_CORS_ORIGINS`        | _(none)_          | Comma-separated allowed origins / 逗号分隔的允许来源         |
+| `AGENT_SEAL_SIGNING_KEY`         | _(none)_          | Ed25519 private key for signing / Ed25519 签名私钥         |
+| `AGENT_SEAL_ENCRYPTION_KEY`      | _(none)_          | AES-256-GCM encryption key / AES-256-GCM 加密密钥              |
+| `AGENT_SEAL_AUTO_TRACE`          | `0`               | Auto-trace LLM calls (`1`=on) / 自动追踪 LLM 调用（`1`=开启）           |
+| `AGENT_SEAL_TRACE_PII_REDACT`    | `0`               | Redact PII in traces (`1`=on) / 追踪中脱敏 PII（`1`=开启）           |
+| `AGENT_SEAL_LOG_LEVEL`           | `info`            | `debug`, `info`, `warning`              |
+| `AGENT_SEAL_REDIS_URI`           | _(none)_          | Redis connection for caching / Redis 缓存连接            |
+| `AGENT_SEAL_SLACK_WEBHOOK`       | _(none)_          | Slack notification webhook / Slack 通知 Webhook              |
+| `AGENT_SEAL_SMTP_HOST`           | _(none)_          | Email notification SMTP host / 邮件通知 SMTP 主机            |
+| `AGENT_SEAL_NOTIFY_ON_FAILURE`   | `0`               | Notify on chain integrity failure / 链完整性失败时通知       |
+| `AGENT_SEAL_EVIDENCE_STORE`      | _(none)_          | External evidence store path / 外部证据存储路径            |
 
 ---
 
@@ -367,8 +367,8 @@ All settings via environment variables (12-Factor App). See `.env.example` for a
 # 1. Copy and configure environment
 # 1. 复制并配置环境变量
 cp .env.example .env
-# Edit .env — set POSTGRES_PASSWORD, AGENT_AUDIT_SECRET_KEY, API keys
-# 编辑 .env —— 设置 POSTGRES_PASSWORD、AGENT_AUDIT_SECRET_KEY、API 密钥
+# Edit .env — set POSTGRES_PASSWORD, AGENT_SEAL_SECRET_KEY, API keys
+# 编辑 .env —— 设置 POSTGRES_PASSWORD、AGENT_SEAL_SECRET_KEY、API 密钥
 
 # 2. Start the stack
 # 2. 启动服务栈
@@ -394,7 +394,7 @@ The stack includes / 服务栈包含：
 ```bash
 # Clone & install
 # 克隆并安装
-git clone https://github.com/user/agent-audit.git && cd agent-audit
+git clone https://github.com/user/agent-seal.git && cd agent-seal
 pip install -e ".[all]"
 
 # Run tests
@@ -404,7 +404,7 @@ pytest tests/ -v
 # Code quality
 # 代码质量
 ruff check .
-mypy agent_audit/
+mypy agent_seal/
 
 # Run demo
 # 运行演示
@@ -421,7 +421,7 @@ For local development with PostgreSQL, the project ships `pg_embedded/` — an e
 |------------|-----------------------------------------------|
 | Version / 版本    | PostgreSQL 17.10                              |
 | Port / 端口       | `5432` (bound to `127.0.0.1` / `::1` only / 仅绑定 `127.0.0.1` / `::1`)   |
-| Database / 数据库   | `agent_audit`                                 |
+| Database / 数据库   | `agent_seal`                                 |
 | User / 用户       | `audit` (trust auth — local only / trust 认证——仅限本地)             |
 | Disk usage / 磁盘占用 | ~942 MB (data + binaries / 数据 + 二进制文件)                     |
 | Git tracked / Git 追踪| No (` .gitignore`d) / 否（已 `.gitignore`）                            |
@@ -445,8 +445,8 @@ pg_embedded/stop.bat
 Configure via `.env` / 通过 `.env` 配置：
 
 ```bash
-AGENT_AUDIT_DB_URL=postgresql://audit:***@127.0.0.1:5432/agent_audit
-AGENT_AUDIT_STORAGE_BACKEND=postgresql
+AGENT_SEAL_DB_URL=postgresql://audit:***@127.0.0.1:5432/agent_seal
+AGENT_SEAL_STORAGE_BACKEND=postgresql
 ```
 
 > **Why embedded?** Avoids Docker/brew/system-PG dependency for quick local testing. **Why stop it?** 942 MB never-idle memory. Start it only when you need PG, stop it when you don't. For always-on development, prefer `docker compose up -d db`.

@@ -21,7 +21,7 @@ from starlette.responses import JSONResponse
 from starlette.testclient import TestClient
 
 # APIKeyAuthMiddleware is imported lazily inside test functions to avoid
-# a module-level import of agent_audit.server.middlewares during pytest
+# a module-level import of agent_seal.server.middlewares during pytest
 # collection.  This prevents a stale config reference when test_config.py's
 # TestDotenvLoading calls ``reload()`` on the config module.
 #
@@ -40,9 +40,9 @@ class TestSetupCORS:
     """setup_cors() registers CORSMiddleware with correct origins."""
 
     def test_registers_cors_middleware(self):
-        from agent_audit.server.middlewares import setup_cors
+        from agent_seal.server.middlewares import setup_cors
 
-        with patch.dict(os.environ, {"AGENT_AUDIT_CORS_ORIGINS": "http://localhost:5173"}):
+        with patch.dict(os.environ, {"AGENT_SEAL_CORS_ORIGINS": "http://localhost:5173"}):
             app = FastAPI()
             with patch.object(app, "add_middleware") as mock_add:
                 setup_cors(app)
@@ -56,10 +56,10 @@ class TestSetupCORS:
 
     def test_cors_origins_from_config(self):
         """When config.cors_origins is set, they are passed through."""
-        from agent_audit.server.middlewares import setup_cors
+        from agent_seal.server.middlewares import setup_cors
 
         test_origins = ["https://app.example.com", "https://admin.example.com"]
-        with patch.dict(os.environ, {"AGENT_AUDIT_CORS_ORIGINS": ",".join(test_origins)}):
+        with patch.dict(os.environ, {"AGENT_SEAL_CORS_ORIGINS": ",".join(test_origins)}):
             app = FastAPI()
             with patch.object(app, "add_middleware") as mock_add:
                 setup_cors(app)
@@ -73,9 +73,9 @@ class TestSetupCORS:
 
     def test_cors_origins_default_wildcard(self):
         """Default cors_origins is ['*'] when not configured."""
-        from agent_audit.server.middlewares import setup_cors
+        from agent_seal.server.middlewares import setup_cors
 
-        with patch.dict(os.environ, {"AGENT_AUDIT_CORS_ORIGINS": "*"}):
+        with patch.dict(os.environ, {"AGENT_SEAL_CORS_ORIGINS": "*"}):
             app = FastAPI()
             with patch.object(app, "add_middleware") as mock_add:
                 setup_cors(app)
@@ -97,7 +97,7 @@ class TestSetupGZip:
     """setup_gzip() registers GZipMiddleware with correct minimum_size."""
 
     def test_registers_gzip_middleware(self):
-        from agent_audit.server.middlewares import setup_gzip
+        from agent_seal.server.middlewares import setup_gzip
 
         app = FastAPI()
         with patch.object(app, "add_middleware") as mock_add:
@@ -115,7 +115,7 @@ class TestSetupPrometheus:
 
     def test_instruments_fastapi_app(self):
         """setup_prometheus() should add request-level instrumentation middleware."""
-        from agent_audit.server.middlewares import setup_prometheus
+        from agent_seal.server.middlewares import setup_prometheus
 
         app = FastAPI()
         setup_prometheus(app)
@@ -133,18 +133,18 @@ class TestSetupApiKeyAuth:
     """setup_api_key_auth() only registers middleware when keys exist."""
 
     def test_registers_middleware_when_keys_present(self):
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware, setup_api_key_auth
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware, setup_api_key_auth
 
-        with patch.dict(os.environ, {"AGENT_AUDIT_API_KEYS": "key-123"}):
+        with patch.dict(os.environ, {"AGENT_SEAL_API_KEYS": "key-123"}):
             app = FastAPI()
             with patch.object(app, "add_middleware") as mock_add:
                 setup_api_key_auth(app)
                 mock_add.assert_called_once_with(APIKeyAuthMiddleware, api_keys=["key-123"])
 
     def test_skips_middleware_when_keys_empty(self):
-        from agent_audit.server.middlewares import setup_api_key_auth
+        from agent_seal.server.middlewares import setup_api_key_auth
 
-        with patch.dict(os.environ, {"AGENT_AUDIT_API_KEYS": ""}):
+        with patch.dict(os.environ, {"AGENT_SEAL_API_KEYS": ""}):
             app = FastAPI()
             with patch.object(app, "add_middleware") as mock_add:
                 setup_api_key_auth(app)
@@ -157,10 +157,10 @@ class TestSetupApiKeyAuth:
         entries via ``k.strip()``.  A lone comma in the env var produces
         an empty list after filtering, so the middleware is skipped.
         """
-        from agent_audit.server.middlewares import setup_api_key_auth
+        from agent_seal.server.middlewares import setup_api_key_auth
 
         # A single comma produces [] after strip+filter
-        with patch.dict(os.environ, {"AGENT_AUDIT_API_KEYS": ","}):
+        with patch.dict(os.environ, {"AGENT_SEAL_API_KEYS": ","}):
             app = FastAPI()
             with patch.object(app, "add_middleware") as mock_add:
                 setup_api_key_auth(app)
@@ -176,8 +176,8 @@ class TestSetupAll:
     """setup_all() calls all sub-functions in the expected order."""
 
     def test_calls_all_setup_functions(self):
-        from agent_audit.server import middlewares as mw_mod
-        from agent_audit.server.middlewares import setup_all
+        from agent_seal.server import middlewares as mw_mod
+        from agent_seal.server.middlewares import setup_all
 
         app = FastAPI()
         with (
@@ -194,8 +194,8 @@ class TestSetupAll:
 
     def test_calls_in_correct_order(self):
         """Order: gzip → cors → api_key_auth → prometheus."""
-        from agent_audit.server import middlewares as mw_mod
-        from agent_audit.server.middlewares import setup_all
+        from agent_seal.server import middlewares as mw_mod
+        from agent_seal.server.middlewares import setup_all
 
         call_order: list[str] = []
 
@@ -266,7 +266,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_disabled_passes_all_requests(self):
         """When no keys are configured, every request passes through."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=[])
         assert mw._enabled is False
@@ -280,7 +280,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_non_api_route_bypasses_auth(self):
         """Routes not starting with /api should skip auth check."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["secret123"])
 
@@ -295,7 +295,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_public_endpoints_bypass_auth(self, public_path):
         """Public /api/* endpoints listed in _PUBLIC_ENDPOINTS bypass auth."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["secret123"])
         request = self._make_request(public_path)
@@ -307,7 +307,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_valid_x_api_key_passes(self):
         """Valid X-API-Key header should pass through."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["valid-key"])
         request = self._make_request("/api/v1/events", {"X-API-Key": "valid-key"})
@@ -317,7 +317,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_valid_bearer_token_passes(self):
         """Valid Authorization: Bearer *** should pass through."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["bearer-token"])
         request = self._make_request("/api/v1/events", {"Authorization": "Bearer bearer-token"})
@@ -327,7 +327,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_multiple_keys_any_valid(self):
         """Any of the configured keys should be accepted."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["key-a", "key-b", "key-c"])
         request = self._make_request("/api/v1/events", {"X-API-Key": "key-c"})
@@ -339,7 +339,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_missing_key_returns_401(self):
         """Request without any auth header on /api/* should get 401."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["secret"])
         request = self._make_request("/api/v1/events")
@@ -352,7 +352,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_invalid_key_returns_401(self):
         """Wrong X-API-Key header value should get 401."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["real-key"])
         request = self._make_request("/api/v1/events", {"X-API-Key": "wrong-key"})
@@ -365,7 +365,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_invalid_bearer_token_returns_401(self):
         """Wrong Bearer token should get 401."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["real-key"])
         request = self._make_request("/api/v1/events", {"Authorization": "Bearer wrong-token"})
@@ -378,7 +378,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_401_response_headers(self):
         """Unauthorized response includes WWW-Authenticate header."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["secret"])
         request = self._make_request("/api/v1/events")
@@ -390,7 +390,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_401_error_detail(self):
         """Unauthorized response detail should describe the error."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["secret"])
         request = self._make_request("/api/v1/events")
@@ -402,7 +402,7 @@ class TestAPIKeyAuthMiddlewareUnit:
     @pytest.mark.asyncio
     async def test_empty_key_returns_401(self):
         """Empty string key should be rejected."""
-        from agent_audit.server.middlewares import APIKeyAuthMiddleware
+        from agent_seal.server.middlewares import APIKeyAuthMiddleware
 
         mw = APIKeyAuthMiddleware(MagicMock(), api_keys=["valid-key"])
         request = self._make_request("/api/v1/events", {"X-API-Key": ""})
@@ -427,13 +427,13 @@ class TestAPIKeyAuthMiddlewareIntegration:
 
     @pytest.fixture
     def client(self):
-        from agent_audit.server.middlewares import setup_all
+        from agent_seal.server.middlewares import setup_all
 
         _app = FastAPI()
 
         with patch.dict(
             os.environ,
-            {"AGENT_AUDIT_API_KEYS": "test-key-123", "AGENT_AUDIT_CORS_ORIGINS": "*"},
+            {"AGENT_SEAL_API_KEYS": "test-key-123", "AGENT_SEAL_CORS_ORIGINS": "*"},
         ):
             setup_all(_app)
 
@@ -510,7 +510,7 @@ class TestAppPyRegression:
     def test_app_py_uses_setup_all_not_inline_middleware(self):
         """app.py imports and calls setup_all() rather than configuring
         middleware inline."""
-        import agent_audit.server.app as server_app_mod
+        import agent_seal.server.app as server_app_mod
 
         with open(server_app_mod.__file__) as _f:
             source = _f.read()
@@ -519,7 +519,7 @@ class TestAppPyRegression:
 
     def test_app_py_has_no_inline_cors(self):
         """app.py should NOT contain direct CORSMiddleware usage."""
-        import agent_audit.server.app as server_app_mod
+        import agent_seal.server.app as server_app_mod
 
         with open(server_app_mod.__file__) as _f:
             source = _f.read()
@@ -535,13 +535,13 @@ class TestAppPyRegression:
         import sys
 
         # Ensure app module is re-imported with patched env
-        sys.modules.pop("agent_audit.server.app", None)
+        sys.modules.pop("agent_seal.server.app", None)
 
         with patch.dict(
             os.environ,
-            {"AGENT_AUDIT_API_KEYS": "test-key", "AGENT_AUDIT_CORS_ORIGINS": "*"},
+            {"AGENT_SEAL_API_KEYS": "test-key", "AGENT_SEAL_CORS_ORIGINS": "*"},
         ):
-            from agent_audit.server.app import app
+            from agent_seal.server.app import app
 
             client = TestClient(app)
             # /api/v1/events is a protected route; it returns 401 without auth

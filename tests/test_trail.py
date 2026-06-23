@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from agent_audit.core.chain import ChainEvent
-from agent_audit.trail import AuditEvent, AuditIntegrityError, AuditTrail
+from agent_seal.core.chain import ChainEvent
+from agent_seal.trail import AuditEvent, AuditIntegrityError, AuditTrail
 
 # ═══════════════════════════ FIXTURES ═══════════════════════════
 
@@ -14,7 +14,7 @@ from agent_audit.trail import AuditEvent, AuditIntegrityError, AuditTrail
 @pytest.fixture
 def mock_engine():
     """Mock AuditEngine so no real store backend is created."""
-    with patch("agent_audit.trail.AuditEngine") as m:
+    with patch("agent_seal.trail.AuditEngine") as m:
         instance = m.return_value
         # Provide sensible defaults for all delegated methods
         instance.log.return_value = ChainEvent(

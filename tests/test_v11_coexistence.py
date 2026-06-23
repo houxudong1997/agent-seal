@@ -1,5 +1,5 @@
 """
-Cross-module coexistence test for agent-audit v1.1.
+Cross-module coexistence test for agent-seal v1.1.
 
 Verifies that @observe + LangChain CallbackHandler + Hermes middleware
 can coexist without conflicts.
@@ -27,7 +27,7 @@ from starlette.testclient import TestClient
 @pytest.fixture
 def real_engine():
     """A real JSONL AuditEngine for integration-level tests."""
-    from agent_audit.engine import AuditEngine
+    from agent_seal.engine import AuditEngine
 
     with tempfile.TemporaryDirectory() as tmpdir:
         uri = f"jsonl://{tmpdir}"
@@ -54,8 +54,8 @@ class TestObserveAndCallback:
 
     def test_both_log_to_same_engine(self, mock_engine):
         """Both @observe and CallbackHandler should log to the same engine."""
-        from agent_audit.integrations import langchain_audit_callback
-        from agent_audit.observe import observe, set_engine
+        from agent_seal.integrations import langchain_audit_callback
+        from agent_seal.observe import observe, set_engine
 
         set_engine(mock_engine)
 
@@ -83,8 +83,8 @@ class TestObserveAndCallback:
 
     def test_no_event_type_conflict(self, mock_engine):
         """@observe and CallbackHandler use different event_types."""
-        from agent_audit.integrations import langchain_audit_callback
-        from agent_audit.observe import observe, set_engine
+        from agent_seal.integrations import langchain_audit_callback
+        from agent_seal.observe import observe, set_engine
 
         set_engine(mock_engine)
 
@@ -114,8 +114,8 @@ class TestCallbackAndMiddleware:
 
     def test_both_log_independently(self, mock_engine):
         """CallbackHandler and middleware should log separate events."""
-        from agent_audit.integrations import langchain_audit_callback
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.integrations import langchain_audit_callback
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         app = FastAPI()
         app.add_middleware(HermesAuditMiddleware, engine=mock_engine, agent_id="hermes-agent")
@@ -138,8 +138,8 @@ class TestCallbackAndMiddleware:
 
     def test_no_session_collision(self, mock_engine):
         """Callback and middleware should use different session IDs."""
-        from agent_audit.integrations import langchain_audit_callback
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.integrations import langchain_audit_callback
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         app = FastAPI()
         app.add_middleware(HermesAuditMiddleware, engine=mock_engine, agent_id="hermes-agent")
@@ -170,10 +170,10 @@ class TestAllThreeTogether:
 
     def test_all_log_to_real_engine(self):
         """All three modules should log successfully to a real AuditEngine."""
-        from agent_audit.engine import AuditEngine
-        from agent_audit.integrations import langchain_audit_callback
-        from agent_audit.observe import observe, set_engine
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.engine import AuditEngine
+        from agent_seal.integrations import langchain_audit_callback
+        from agent_seal.observe import observe, set_engine
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         with tempfile.TemporaryDirectory() as tmpdir:
             uri = f"jsonl://{tmpdir}"
@@ -217,9 +217,9 @@ class TestAllThreeTogether:
 
     def test_no_engine_conflicts(self, mock_engine):
         """All three modules using same mock engine should not conflict."""
-        from agent_audit.integrations import langchain_audit_callback
-        from agent_audit.observe import observe, set_engine
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.integrations import langchain_audit_callback
+        from agent_seal.observe import observe, set_engine
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         set_engine(mock_engine)
 

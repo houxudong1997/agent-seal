@@ -1,4 +1,4 @@
-# agent-audit — tamper-evident audit trail for AI agents
+# agent-seal — tamper-evident audit trail for AI agents
 # Core dependencies.
 #
 # Install:  pip install -r requirements.txt

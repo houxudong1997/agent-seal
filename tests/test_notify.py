@@ -3,7 +3,7 @@
 import json
 from unittest.mock import patch, MagicMock
 import pytest
-from agent_audit.notify import Alert, SlackNotifier, ConsoleNotifier
+from agent_seal.notify import Alert, SlackNotifier, ConsoleNotifier
 
 
 class TestAlert:
@@ -125,7 +125,7 @@ class TestSlackNotifier:
 
         payload = json.loads(mock_urlopen.call_args[0][0].data)
         attachment = payload["attachments"][0]
-        assert attachment["footer"] == "agent-audit"
+        assert attachment["footer"] == "agent-seal"
         fields = {f["title"]: f["value"] for f in attachment["fields"]}
         assert fields["Agent"] == "agent-x"
         assert fields["Session"] == "session-y"

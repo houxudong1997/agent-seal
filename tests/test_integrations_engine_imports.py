@@ -3,8 +3,8 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 # ---- Step 1: Import check ----
-from agent_audit.integrations import langchain_audit_callback, AuditedAgent
-from agent_audit.engine import AuditEngine
+from agent_seal.integrations import langchain_audit_callback, AuditedAgent
+from agent_seal.engine import AuditEngine
 
 
 def test_audited_agent_engine_field():

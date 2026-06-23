@@ -1,4 +1,4 @@
-# agent-audit — development & testing dependencies
+# agent-seal — development & testing dependencies
 #
 # Install:  pip install -r requirements-dev.txt
 # Includes core dependencies from requirements.txt.

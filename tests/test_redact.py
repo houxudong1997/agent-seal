@@ -1,7 +1,7 @@
 """Tests for core/redact.py — PII redaction (0% baseline)."""
 
 import pytest
-from agent_audit.core.redact import Redactor, REDACTORS
+from agent_seal.core.redact import Redactor, REDACTORS
 
 
 class TestRedactorSanitize:

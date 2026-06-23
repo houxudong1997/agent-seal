@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PostgreSQL-only benchmark for agent-audit v1.0.
+PostgreSQL-only benchmark for agent-seal v1.0.
 Runs all 6 Appendix A scenarios against PostgreSQLStore.
 Produces Markdown-compatible output for inclusion in benchmark-v1.0.md.
 """
@@ -18,13 +18,13 @@ from contextlib import suppress
 from datetime import UTC, datetime
 from pathlib import Path
 
-os.environ.setdefault("AGENT_AUDIT_DB_URL", "postgresql://audit:***@127.0.0.1:5432/agent_audit")
+os.environ.setdefault("AGENT_SEAL_DB_URL", "postgresql://audit:***@127.0.0.1:5432/agent_seal")
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from agent_audit.core.chain import ChainEvent, SessionChain
-from agent_audit.core.storage import PostgreSQLStore
+from agent_seal.core.chain import ChainEvent, SessionChain
+from agent_seal.core.storage import PostgreSQLStore
 
 # Config
 QUICK = "--quick" in sys.argv
@@ -39,7 +39,7 @@ N_EVIDENCE = 10_000 // SCALE
 WARMUP = 2
 RUNS = 5
 
-DSN = "postgresql://audit:***@127.0.0.1:5432/agent_audit"
+DSN = "postgresql://audit:***@127.0.0.1:5432/agent_seal"
 
 _chains: dict[str, SessionChain] = {}
 
@@ -341,7 +341,7 @@ scenarios = [
 ]
 
 print("=" * 72)
-print("  agent-audit v1.0 — PostgreSQL Performance Benchmark")
+print("  agent-seal v1.0 — PostgreSQL Performance Benchmark")
 print("=" * 72)
 print(f"  Mode: {'QUICK (1/10 scale)' if QUICK else 'FULL SCALE'}")
 print(f"  DSN: {DSN}")

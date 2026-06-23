@@ -28,14 +28,14 @@ DASHBOARD_PATH = (
     / "deploy"
     / "grafana"
     / "dashboards"
-    / "agent-audit-overview.json"
+    / "agent-seal-overview.json"
 )
 
 # Expected dashboard metadata
-EXPECTED_UID = "agent-audit-overview"
-EXPECTED_TITLE = "Agent Audit — Overview"
+EXPECTED_UID = "agent-seal-overview"
+EXPECTED_TITLE = "Agent Seal — Overview"
 EXPECTED_SCHEMA_VERSION = 39
-EXPECTED_TAGS = ["agent-audit", "production"]
+EXPECTED_TAGS = ["agent-seal", "production"]
 EXPECTED_REFRESH = "30s"
 
 # Expected panels: (id, title, type, datasource_type)
@@ -214,8 +214,8 @@ class TestDashboardIdentity:
         )
 
     def test_meta_provisioner(self, meta: dict):
-        assert meta.get("createdBy") == "agent-audit-provisioner", (
-            f"Expected createdBy='agent-audit-provisioner', got {meta.get('createdBy')!r}"
+        assert meta.get("createdBy") == "agent-seal-provisioner", (
+            f"Expected createdBy='agent-seal-provisioner', got {meta.get('createdBy')!r}"
         )
 
     def test_meta_saveable(self, meta: dict):

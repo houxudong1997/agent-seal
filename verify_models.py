@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(0, ".")
 
-from agent_audit.models import Base
+from agent_seal.models import Base
 
 # 1. Import models
 print("Models imported OK")

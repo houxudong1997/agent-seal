@@ -1,5 +1,5 @@
 """
-Tests for agent_audit.observe — the @observe decorator.
+Tests for agent_seal.observe — the @observe decorator.
 
 Coverage targets:
   - Basic decorator: no-parens, with-parens (name/metadata/category)
@@ -21,7 +21,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agent_audit.observe import (
+from agent_seal.observe import (
     _current_engine,
     _current_span,
     _summarize,
@@ -75,7 +75,7 @@ class TestFormatArgs:
 
     def test_self_is_class_name(self):
         """For bound methods, the 'self' arg should show the class name."""
-        from agent_audit.observe import _format_args
+        from agent_seal.observe import _format_args
 
         class MyTool:
             @observe
@@ -209,7 +209,7 @@ class TestInputOutputRecording:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -243,7 +243,7 @@ class TestInputOutputRecording:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -267,7 +267,7 @@ class TestInputOutputRecording:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -299,7 +299,7 @@ class TestExecutionTime:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -319,7 +319,7 @@ class TestExecutionTime:
 
     def test_timestamp_is_float(self, tmp_path):
         """Timestamp in the chain event should be a float (Unix time)."""
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         audit_dir = tmp_path / "audit_logs"
         engine = AuditEngine(str(audit_dir))
@@ -355,7 +355,7 @@ class TestNestedSpans:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -392,7 +392,7 @@ class TestNestedSpans:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -434,7 +434,7 @@ class TestNestedSpans:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -466,7 +466,7 @@ class TestExceptionHandling:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -488,7 +488,7 @@ class TestExceptionHandling:
 
     def test_exception_re_raised(self):
         """The exception must propagate — not be swallowed."""
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine()
         set_engine(engine)
@@ -505,7 +505,7 @@ class TestExceptionHandling:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -547,8 +547,8 @@ class TestEngineIntegration:
         _current_engine.set(None)
 
         # AuditEngine is imported lazily inside get_engine(), so we must
-        # patch it at the import location (agent_audit.engine), not observe.
-        from agent_audit import engine as engine_module
+        # patch it at the import location (agent_seal.engine), not observe.
+        from agent_seal import engine as engine_module
         with patch.object(engine_module, "AuditEngine") as mock_ae:
             mock_instance = MagicMock()
             mock_ae.return_value = mock_instance
@@ -569,7 +569,7 @@ class TestEngineIntegration:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -642,7 +642,7 @@ class TestObserveEdgeCases:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -676,7 +676,7 @@ class TestObserveEdgeCases:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)
@@ -698,7 +698,7 @@ class TestObserveEdgeCases:
         import json
 
         audit_dir = tmp_path / "audit_logs"
-        from agent_audit.engine import AuditEngine
+        from agent_seal.engine import AuditEngine
 
         engine = AuditEngine(str(audit_dir))
         set_engine(engine)

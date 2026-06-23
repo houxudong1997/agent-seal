@@ -50,7 +50,7 @@
         </svg>
       </div>
       <div class="brand-text">
-        <h1>Agent Audit</h1>
+        <h1>Agent Seal</h1>
         <span class="brand-sub">Dashboard</span>
       </div>
     </div>

@@ -3,7 +3,7 @@
 import os
 import tempfile
 
-from agent_audit.core.crypto import (
+from agent_seal.core.crypto import (
     SignedAuditEngine,
     Signer,
     Verifier,

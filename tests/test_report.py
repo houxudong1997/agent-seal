@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agent_audit.report import (
+from agent_seal.report import (
     _event_table,
     _integrity_status,
     _prompt_table,

@@ -9,8 +9,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from agent_audit.storage import SQLiteTrail
-from agent_audit.trail import AuditTrail
+from agent_seal.storage import SQLiteTrail
+from agent_seal.trail import AuditTrail
 
 
 def bench(name, fn, iterations=1):
@@ -26,7 +26,7 @@ def bench(name, fn, iterations=1):
 
 def main():
     N = 10000
-    print(f"agent-audit benchmark — {N:,} events\n")
+    print(f"agent-seal benchmark — {N:,} events\n")
 
     # ── JSONL ──
     tmp = tempfile.mkdtemp()

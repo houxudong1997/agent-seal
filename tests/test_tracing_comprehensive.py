@@ -1,4 +1,4 @@
-"""Comprehensive tests for agent-audit tracing module.
+"""Comprehensive tests for agent-seal tracing module.
 
 Covers the full surface area per P3.1 spec:
   - LLM call interception (real monkey-patching flow)
@@ -36,7 +36,7 @@ class TestLLMInterception:
         mock_openai.chat.completions.create = original_fn
 
         with patch.dict(sys.modules, {"openai": mock_openai}):
-            from agent_audit.tracing.openai_instrumentor import OpenAIInstrumentor
+            from agent_seal.tracing.openai_instrumentor import OpenAIInstrumentor
 
             instr = OpenAIInstrumentor()
             instr.install()
@@ -52,7 +52,7 @@ class TestLLMInterception:
         mock_openai.chat.completions.create = original_fn
 
         with patch.dict(sys.modules, {"openai": mock_openai}):
-            from agent_audit.tracing.openai_instrumentor import OpenAIInstrumentor
+            from agent_seal.tracing.openai_instrumentor import OpenAIInstrumentor
 
             instr = OpenAIInstrumentor()
             instr.install()
@@ -69,7 +69,7 @@ class TestLLMInterception:
         mock_openai.chat.completions.create = original_fn
 
         with patch.dict(sys.modules, {"openai": mock_openai}):
-            from agent_audit.tracing.openai_instrumentor import OpenAIInstrumentor
+            from agent_seal.tracing.openai_instrumentor import OpenAIInstrumentor
 
             instr = OpenAIInstrumentor()
             instr.install()
@@ -106,8 +106,8 @@ class TestLLMInterception:
         mock_openai.chat.completions.create = mock_original_create
 
         with patch.dict(sys.modules, {"openai": mock_openai}):
-            from agent_audit.tracing.config import TraceConfig
-            from agent_audit.tracing.openai_instrumentor import OpenAIInstrumentor
+            from agent_seal.tracing.config import TraceConfig
+            from agent_seal.tracing.openai_instrumentor import OpenAIInstrumentor
 
             config = TraceConfig(auto_audit=False, auto_cost=True)
             instr = OpenAIInstrumentor(config=config)
@@ -122,8 +122,8 @@ class TestLLMInterception:
 
     def test_trace_call_with_openai_sdk_response(self):
         """_trace_call extracts telemetry from an SDK-like response object."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         usage = MagicMock()
         usage.prompt_tokens = 50
@@ -159,8 +159,8 @@ class TestLLMInterception:
 
     def test_trace_call_result_no_usage_field(self):
         """When result has no usage, tokens default to 0."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -182,7 +182,7 @@ class TestLLMInterception:
 
     def test_redact_messages_various_types(self):
         """_redact_messages handles diverse content types."""
-        from agent_audit.tracing.openai_instrumentor import _redact_messages
+        from agent_seal.tracing.openai_instrumentor import _redact_messages
 
         long_content = "x" * 5000
         result = _redact_messages([{"role": "user", "content": long_content}])
@@ -220,8 +220,8 @@ class TestAuditTrailWrite:
 
     def test_audit_logged_with_full_metadata(self):
         """Audit event includes all expected fields."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         usage = MagicMock()
         usage.prompt_tokens = 100
@@ -243,7 +243,7 @@ class TestAuditTrailWrite:
         engine = MagicMock()
         config = TraceConfig(auto_audit=True, auto_cost=True)
 
-        with patch("agent_audit.tracing.openai_instrumentor.estimate_cost") as mock_cost:
+        with patch("agent_seal.tracing.openai_instrumentor.estimate_cost") as mock_cost:
             mock_cost.return_value = Decimal("0.002000")
             _trace_call(
                 original=original,
@@ -275,8 +275,8 @@ class TestAuditTrailWrite:
 
     def test_audit_not_called_when_auto_audit_false(self):
         """auto_audit=False skips engine.log entirely."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -305,8 +305,8 @@ class TestAuditTrailWrite:
 
     def test_audit_with_no_engine_noop(self):
         """When engine is None and auto_audit=True, no crash."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -333,8 +333,8 @@ class TestAuditTrailWrite:
 
     def test_audit_with_empty_response_content(self):
         """When response has no content, output_text is empty string."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         choice = MagicMock()
         choice.message.content = None
@@ -366,8 +366,8 @@ class TestAuditTrailWrite:
 
     def test_audit_with_no_choices(self):
         """When response.choices is empty, output_text is empty."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -396,8 +396,8 @@ class TestAuditTrailWrite:
 
     def test_audit_exception_does_not_propagate(self):
         """If engine.log raises, _trace_call still returns the result."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -427,8 +427,8 @@ class TestAuditTrailWrite:
 
     def test_audit_input_text_truncated_to_max_prompt_len(self):
         """Input/output text is truncated by config.max_prompt_len."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         choice = MagicMock()
         choice.message.content = "o" * 6000
@@ -476,8 +476,8 @@ class TestCostCalculation:
 
     def test_auto_cost_true_estimates_cost(self):
         """When auto_cost=True, estimate_cost is called with correct args."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         usage = MagicMock()
         usage.prompt_tokens = 1000
@@ -493,7 +493,7 @@ class TestCostCalculation:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_cost=True, auto_audit=False)
 
-        with patch("agent_audit.tracing.openai_instrumentor.estimate_cost") as mock_cost:
+        with patch("agent_seal.tracing.openai_instrumentor.estimate_cost") as mock_cost:
             mock_cost.return_value = Decimal("0.000600")
             _trace_call(
                 original=original,
@@ -509,8 +509,8 @@ class TestCostCalculation:
 
     def test_auto_cost_false_skips_cost(self):
         """When auto_cost=False, estimate_cost is not called."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         usage = MagicMock()
         usage.prompt_tokens = 1000
@@ -525,7 +525,7 @@ class TestCostCalculation:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_cost=False, auto_audit=False)
 
-        with patch("agent_audit.tracing.openai_instrumentor.estimate_cost") as mock_cost:
+        with patch("agent_seal.tracing.openai_instrumentor.estimate_cost") as mock_cost:
             _trace_call(
                 original=original,
                 args=(),
@@ -540,8 +540,8 @@ class TestCostCalculation:
 
     def test_cost_exception_does_not_crash(self):
         """If estimate_cost raises, it's caught and cost defaults to 0.0."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -554,7 +554,7 @@ class TestCostCalculation:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_cost=True, auto_audit=False)
 
-        with patch("agent_audit.tracing.openai_instrumentor.estimate_cost") as mock_cost:
+        with patch("agent_seal.tracing.openai_instrumentor.estimate_cost") as mock_cost:
             mock_cost.side_effect = ValueError("bad model")
             result = _trace_call(
                 original=original,
@@ -569,14 +569,14 @@ class TestCostCalculation:
 
     def test_cost_with_zero_tokens(self):
         """Cost is zero when both token counts are zero."""
-        from agent_audit.tracing.cost import estimate_cost
+        from agent_seal.tracing.cost import estimate_cost
 
         cost = estimate_cost("openai", "gpt-4o", 0, 0)
         assert cost == Decimal("0")
 
     def test_cost_with_large_numbers(self):
         """Cost calculation with large token counts."""
-        from agent_audit.tracing.cost import estimate_openai_cost
+        from agent_seal.tracing.cost import estimate_openai_cost
 
         cost = estimate_openai_cost("gpt-4o", 10_000_000, 10_000_000)
         expected = Decimal("25.00") + Decimal("100.00")
@@ -584,7 +584,7 @@ class TestCostCalculation:
 
     def test_cost_all_openai_models(self):
         """All OpenAI models in price table produce non-zero cost."""
-        from agent_audit.tracing.cost import _OPENAI_PRICES, estimate_openai_cost
+        from agent_seal.tracing.cost import _OPENAI_PRICES, estimate_openai_cost
 
         for model in _OPENAI_PRICES:
             cost = estimate_openai_cost(model, 100, 50)
@@ -601,8 +601,8 @@ class TestSessionTracking:
 
     def test_session_id_from_audit_session_id(self):
         """session_id comes from kwargs['audit_session_id']."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -635,8 +635,8 @@ class TestSessionTracking:
 
     def test_session_id_fallback_to_user(self):
         """Without audit_session_id, fallback to kwargs['user']."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -669,8 +669,8 @@ class TestSessionTracking:
 
     def test_session_id_empty_no_session(self):
         """When neither audit_session_id nor user is present, session becomes 'default'."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -702,8 +702,8 @@ class TestSessionTracking:
 
     def test_agent_id_from_audit_agent_id(self):
         """agent_id comes from kwargs['audit_agent_id']."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -736,8 +736,8 @@ class TestSessionTracking:
 
     def test_agent_id_fallback_to_openai(self):
         """Without audit_agent_id, agent_id defaults to 'openai'."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -769,8 +769,8 @@ class TestSessionTracking:
 
     def test_audit_session_id_used_in_llm_calls_persist(self):
         """Session/agent IDs flow into _persist_llm_call."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -783,7 +783,7 @@ class TestSessionTracking:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_audit=False, capture_request=False)
 
-        with patch("agent_audit.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
+        with patch("agent_seal.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
             _trace_call(
                 original=original,
                 args=(),
@@ -815,8 +815,8 @@ class TestErrorEdgeCases:
 
     def test_error_propagates_after_span_cleanup(self):
         """Error from original() is re-raised after span is properly ended."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         original = MagicMock(side_effect=ConnectionError("API timeout"))
         config = TraceConfig(auto_audit=False)
@@ -834,8 +834,8 @@ class TestErrorEdgeCases:
 
     def test_error_from_span_start_not_crash(self):
         """If tracer.start_span raises, _trace_call degrades gracefully."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         bad_tracer = MagicMock()
         bad_tracer.start_span.side_effect = TypeError("span failed")
@@ -864,8 +864,8 @@ class TestErrorEdgeCases:
 
     def test_span_end_called_on_success(self):
         """Span.end() is called after a successful call."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -897,8 +897,8 @@ class TestErrorEdgeCases:
 
     def test_span_end_called_on_error(self):
         """Span.end() is still called when original raises."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -923,8 +923,8 @@ class TestErrorEdgeCases:
 
     def test_span_records_exception_on_error(self):
         """Exception is recorded on the span before cleanup."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -949,8 +949,8 @@ class TestErrorEdgeCases:
 
     def test_error_in_record_exception_does_not_crash(self):
         """If span.record_exception raises, cleanup still happens."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -976,8 +976,8 @@ class TestErrorEdgeCases:
 
     def test_error_in_span_end_does_not_crash(self):
         """If span.end raises, _trace_call still returns the result."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -1009,8 +1009,8 @@ class TestErrorEdgeCases:
 
     def test_persist_failure_is_caught(self):
         """If _persist_llm_call raises, it's caught and result still returned."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -1023,7 +1023,7 @@ class TestErrorEdgeCases:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_audit=False, capture_request=False)
 
-        with patch("agent_audit.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
+        with patch("agent_seal.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
             mock_persist.side_effect = RuntimeError("DB full")
             result = _trace_call(
                 original=original,
@@ -1038,8 +1038,8 @@ class TestErrorEdgeCases:
 
     def test_span_set_attribute_exception_does_not_crash(self):
         """If span.set_attribute raises, it's caught."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -1071,8 +1071,8 @@ class TestErrorEdgeCases:
 
     def test_span_get_span_context_exception_does_not_crash(self):
         """If get_span_context raises, trace_id/span_id default to empty."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -1104,8 +1104,8 @@ class TestErrorEdgeCases:
 
     def test_original_called_with_correct_args(self):
         """The original function receives the same args/kwargs."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         original = MagicMock(return_value="result")
         config = TraceConfig(auto_audit=False)
@@ -1130,8 +1130,8 @@ class TestErrorEdgeCases:
 
     def test_openai_rate_limit_error_propagates(self):
         """APIError / RateLimitError from openai propagates correctly."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         class RateLimitError(Exception):
             pass
@@ -1152,8 +1152,8 @@ class TestErrorEdgeCases:
 
     def test_multiple_exceptions_do_not_mask_result(self):
         """Errors in span + persist + audit all caught, result still returned."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -1175,7 +1175,7 @@ class TestErrorEdgeCases:
         engine.log.side_effect = RuntimeError("audit busted")
         config = TraceConfig(auto_audit=True, capture_request=False)
 
-        with patch("agent_audit.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
+        with patch("agent_seal.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
             mock_persist.side_effect = RuntimeError("DB full")
             result = _trace_call(
                 original=original,
@@ -1200,9 +1200,9 @@ class TestDBPersistence:
 
     def test_persist_skips_when_no_db_url(self):
         """When db_url is empty, _persist_llm_call silently returns."""
-        from agent_audit.tracing.openai_instrumentor import _persist_llm_call
+        from agent_seal.tracing.openai_instrumentor import _persist_llm_call
 
-        with patch("agent_audit.config.config") as mock_cfg:
+        with patch("agent_seal.config.config") as mock_cfg:
             mock_cfg.db_url = ""
             _persist_llm_call(
                 trace_id="abc",
@@ -1224,9 +1224,9 @@ class TestDBPersistence:
 
     def test_persist_sqlalchemy_error_is_caught(self):
         """If SQLAlchemy raises, _persist_llm_call catches it (verifies no crash)."""
-        from agent_audit.tracing.openai_instrumentor import _persist_llm_call
+        from agent_seal.tracing.openai_instrumentor import _persist_llm_call
 
-        with patch("agent_audit.config.config") as mock_cfg:
+        with patch("agent_seal.config.config") as mock_cfg:
             mock_cfg.db_url = "sqlite:///test.db"
             # The function imports create_engine inside a try/except,
             # so it gracefully degrades regardless
@@ -1250,14 +1250,14 @@ class TestDBPersistence:
 
     def test_persist_import_error_llmcall_model(self):
         """If LLMCall model not importable, _persist_llm_call is no-op."""
-        from agent_audit.tracing.openai_instrumentor import _persist_llm_call
+        from agent_seal.tracing.openai_instrumentor import _persist_llm_call
 
         def mock_import(name, *args, **kwargs):
-            if name == "agent_audit.models.llm_call":
+            if name == "agent_seal.models.llm_call":
                 raise ImportError("no module")
             return __import__(name, *args, **kwargs)
 
-        with patch("agent_audit.config.config") as mock_cfg:
+        with patch("agent_seal.config.config") as mock_cfg:
             mock_cfg.db_url = "sqlite:///test.db"
             with patch("builtins.__import__", side_effect=mock_import):
                 _persist_llm_call(
@@ -1289,8 +1289,8 @@ class TestCaptureFlags:
 
     def test_capture_request_skips_body_when_false(self):
         """When capture_request=False, request_body is None in persist."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -1303,7 +1303,7 @@ class TestCaptureFlags:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_audit=False, capture_request=False, capture_response=True)
 
-        with patch("agent_audit.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
+        with patch("agent_seal.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
             _trace_call(
                 original=original,
                 args=(),
@@ -1319,8 +1319,8 @@ class TestCaptureFlags:
 
     def test_capture_response_skips_body_when_false(self):
         """When capture_response=False, response_body is None in persist."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -1333,7 +1333,7 @@ class TestCaptureFlags:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_audit=False, capture_request=True, capture_response=False)
 
-        with patch("agent_audit.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
+        with patch("agent_seal.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
             _trace_call(
                 original=original,
                 args=(),
@@ -1349,8 +1349,8 @@ class TestCaptureFlags:
 
     def test_capture_response_with_model_dump_error(self):
         """If model_dump raises, response_body is None."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -1364,7 +1364,7 @@ class TestCaptureFlags:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_audit=False, capture_request=False, capture_response=True)
 
-        with patch("agent_audit.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
+        with patch("agent_seal.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
             _trace_call(
                 original=original,
                 args=(),
@@ -1380,8 +1380,8 @@ class TestCaptureFlags:
 
     def test_pii_redact_truncates_request_body(self):
         """When pii_redact=True and content long, request body is truncated."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -1396,7 +1396,7 @@ class TestCaptureFlags:
 
         long_msg = [{"role": "user", "content": "x" * 5000}]
 
-        with patch("agent_audit.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
+        with patch("agent_seal.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
             _trace_call(
                 original=original,
                 args=(),
@@ -1414,8 +1414,8 @@ class TestCaptureFlags:
 
     def test_pii_redact_false_preserves_full_content(self):
         """When pii_redact=False, request body content is not truncated."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         response = MagicMock()
         response.model = "gpt-4o"
@@ -1430,7 +1430,7 @@ class TestCaptureFlags:
 
         long_msg = [{"role": "user", "content": "x" * 5000}]
 
-        with patch("agent_audit.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
+        with patch("agent_seal.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
             _trace_call(
                 original=original,
                 args=(),
@@ -1457,8 +1457,8 @@ class TestSpanHandling:
 
     def test_span_attributes_set_correctly(self):
         """Span attributes include all llm.* fields."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -1480,7 +1480,7 @@ class TestSpanHandling:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_audit=False, auto_cost=True)
 
-        with patch("agent_audit.tracing.openai_instrumentor.estimate_cost") as mock_cost:
+        with patch("agent_seal.tracing.openai_instrumentor.estimate_cost") as mock_cost:
             mock_cost.return_value = Decimal("0.000750")
             _trace_call(
                 original=original,
@@ -1505,8 +1505,8 @@ class TestSpanHandling:
 
     def test_span_context_trace_id_formatted(self):
         """Trace ID is formatted as 32-char hex."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -1526,7 +1526,7 @@ class TestSpanHandling:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_audit=False)
 
-        with patch("agent_audit.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
+        with patch("agent_seal.tracing.openai_instrumentor._persist_llm_call") as mock_persist:
             _trace_call(
                 original=original,
                 args=(),
@@ -1543,8 +1543,8 @@ class TestSpanHandling:
 
     def test_span_name_uses_config_prefix(self):
         """Span name is '{config.span_prefix}/{model}'."""
-        from agent_audit.tracing.config import TraceConfig
-        from agent_audit.tracing.openai_instrumentor import _trace_call
+        from agent_seal.tracing.config import TraceConfig
+        from agent_seal.tracing.openai_instrumentor import _trace_call
 
         mock_span = MagicMock()
         mock_span.__enter__ = MagicMock(return_value=mock_span)
@@ -1576,7 +1576,7 @@ class TestSpanHandling:
 
     def test_tracer_resolution_fallback(self):
         """_resolve_tracer returns None when opentelemetry not installed."""
-        from agent_audit.tracing.openai_instrumentor import _resolve_tracer
+        from agent_seal.tracing.openai_instrumentor import _resolve_tracer
 
         with patch.dict(sys.modules, {"opentelemetry": None}):
             result = _resolve_tracer(None)
@@ -1584,7 +1584,7 @@ class TestSpanHandling:
 
     def test_tracer_resolution_passed_through(self):
         """_resolve_tracer returns the tracer if provided."""
-        from agent_audit.tracing.openai_instrumentor import _resolve_tracer
+        from agent_seal.tracing.openai_instrumentor import _resolve_tracer
 
         mock_tracer = MagicMock()
         result = _resolve_tracer(mock_tracer)
@@ -1601,41 +1601,41 @@ class TestAutoTracingExtended:
 
     def test_auto_enabled_recognises_valid_values(self):
         """_auto_enabled returns True for 1/true/yes/on."""
-        from agent_audit.tracing.auto import _auto_enabled
+        from agent_seal.tracing.auto import _auto_enabled
 
         for val in ("1", "true", "TRUE", "True", "yes", "YES", "on", "ON"):
-            with patch.dict(os.environ, {"AGENT_AUDIT_AUTO_TRACE": val}):
+            with patch.dict(os.environ, {"AGENT_SEAL_AUTO_TRACE": val}):
                 assert _auto_enabled() is True, f"Value '{val}' should be True"
 
     def test_auto_enabled_rejects_invalid_values(self):
         """_auto_enabled returns False for other values."""
-        from agent_audit.tracing.auto import _auto_enabled
+        from agent_seal.tracing.auto import _auto_enabled
 
         for val in ("0", "false", "no", "off", "maybe", "", "  "):
-            with patch.dict(os.environ, {"AGENT_AUDIT_AUTO_TRACE": val}):
+            with patch.dict(os.environ, {"AGENT_SEAL_AUTO_TRACE": val}):
                 assert _auto_enabled() is False, f"Value '{val}' should be False"
 
     def test_auto_enabled_when_unset(self):
         """_auto_enabled returns False when env var not set."""
-        from agent_audit.tracing.auto import _auto_enabled
+        from agent_seal.tracing.auto import _auto_enabled
 
-        saved = os.environ.pop("AGENT_AUDIT_AUTO_TRACE", None)
+        saved = os.environ.pop("AGENT_SEAL_AUTO_TRACE", None)
         try:
             assert _auto_enabled() is False
         finally:
             if saved is not None:
-                os.environ["AGENT_AUDIT_AUTO_TRACE"] = saved
+                os.environ["AGENT_SEAL_AUTO_TRACE"] = saved
 
     def test_install_auto_tracing_passes_engine(self):
         """install_auto_tracing passes engine to OpenAIInstrumentor."""
-        import agent_audit.tracing.auto as auto_mod
-        from agent_audit.tracing.auto import install_auto_tracing
+        import agent_seal.tracing.auto as auto_mod
+        from agent_seal.tracing.auto import install_auto_tracing
 
         saved = auto_mod._OPENAI_INSTALLED
         auto_mod._OPENAI_INSTALLED = False
         try:
             engine = MagicMock()
-            with patch("agent_audit.tracing.openai_instrumentor.OpenAIInstrumentor") as mock_instr_cls:
+            with patch("agent_seal.tracing.openai_instrumentor.OpenAIInstrumentor") as mock_instr_cls:
                 mock_instr = MagicMock()
                 mock_instr_cls.return_value = mock_instr
 
@@ -1648,13 +1648,13 @@ class TestAutoTracingExtended:
 
     def test_install_auto_tracing_creates_traceconfig(self):
         """install_auto_tracing creates TraceConfig from app config."""
-        import agent_audit.tracing.auto as auto_mod
-        from agent_audit.tracing.auto import install_auto_tracing
+        import agent_seal.tracing.auto as auto_mod
+        from agent_seal.tracing.auto import install_auto_tracing
 
         saved = auto_mod._OPENAI_INSTALLED
         auto_mod._OPENAI_INSTALLED = False
         try:
-            with patch("agent_audit.tracing.openai_instrumentor.OpenAIInstrumentor") as mock_instr_cls:
+            with patch("agent_seal.tracing.openai_instrumentor.OpenAIInstrumentor") as mock_instr_cls:
                 mock_instr = MagicMock()
                 mock_instr_cls.return_value = mock_instr
 
@@ -1678,7 +1678,7 @@ class TestAuditSpanProcessorExtended:
 
     def test_non_llm_span_ignored(self):
         """Span without llm.* attributes is skipped."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         engine = MagicMock()
         proc = AuditSpanProcessor(engine=engine)
@@ -1693,7 +1693,7 @@ class TestAuditSpanProcessorExtended:
 
     def test_processes_otel_sdk_span(self):
         """Processes a real OTel SDK-like span object."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         engine = MagicMock()
         proc = AuditSpanProcessor(engine=engine, auto_audit=True)
@@ -1734,7 +1734,7 @@ class TestAuditSpanProcessorExtended:
 
     def test_auto_cost_disabled_in_processor(self):
         """When auto_cost=False, cost stays 0.0."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         engine = MagicMock()
         proc = AuditSpanProcessor(engine=engine, auto_audit=True, auto_cost=False)
@@ -1760,7 +1760,7 @@ class TestAuditSpanProcessorExtended:
 
     def test_processor_get_parent_span_id(self):
         """_get_parent_span_id extracts correctly from OTel span."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         class FakeParentCtx:
             span_id = 0xFFEEDDCCBBAA9988
@@ -1785,7 +1785,7 @@ class TestAuditSpanProcessorExtended:
 
     def test_processor_handles_span_with_no_parent(self):
         """_get_parent_span_id returns '' when parent is None."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor
 
         span = MagicMock()
         span.parent = None
@@ -1794,7 +1794,7 @@ class TestAuditSpanProcessorExtended:
 
     def test_create_span_processor_factory(self):
         """create_span_processor returns a configured AuditSpanProcessor."""
-        from agent_audit.tracing.opentelemetry import AuditSpanProcessor, create_span_processor
+        from agent_seal.tracing.opentelemetry import AuditSpanProcessor, create_span_processor
 
         engine = MagicMock()
         proc = create_span_processor(engine, auto_audit=False, auto_cost=False)
@@ -1819,7 +1819,7 @@ class TestAnthropicComprehensive:
         mock_anthropic.messages.create = original_fn
 
         with patch.dict(sys.modules, {"anthropic": mock_anthropic}):
-            from agent_audit.tracing.anthropic import AnthropicInstrumentor
+            from agent_seal.tracing.anthropic import AnthropicInstrumentor
 
             instr = AnthropicInstrumentor()
             instr.install()
@@ -1835,7 +1835,7 @@ class TestAnthropicComprehensive:
         mock_anthropic.messages.create = original_fn
 
         with patch.dict(sys.modules, {"anthropic": mock_anthropic}):
-            from agent_audit.tracing.anthropic import AnthropicInstrumentor
+            from agent_seal.tracing.anthropic import AnthropicInstrumentor
 
             instr = AnthropicInstrumentor()
             instr.install()
@@ -1851,7 +1851,7 @@ class TestAnthropicComprehensive:
         mock_anthropic.messages.create = original_fn
 
         with patch.dict(sys.modules, {"anthropic": mock_anthropic}):
-            from agent_audit.tracing.anthropic import AnthropicInstrumentor
+            from agent_seal.tracing.anthropic import AnthropicInstrumentor
 
             instr = AnthropicInstrumentor()
             instr.install()
@@ -1887,8 +1887,8 @@ class TestAnthropicComprehensive:
         mock_anthropic.messages.create = mock_original_create
 
         with patch.dict(sys.modules, {"anthropic": mock_anthropic}):
-            from agent_audit.tracing.anthropic import AnthropicInstrumentor
-            from agent_audit.tracing.config import TraceConfig
+            from agent_seal.tracing.anthropic import AnthropicInstrumentor
+            from agent_seal.tracing.config import TraceConfig
 
             config = TraceConfig(auto_audit=False, auto_cost=True)
             instr = AnthropicInstrumentor(config=config)
@@ -1903,8 +1903,8 @@ class TestAnthropicComprehensive:
 
     def test_trace_call_result_no_usage_field(self):
         """When result has no usage, tokens default to 0."""
-        from agent_audit.tracing.anthropic import _trace_anthropic_call
-        from agent_audit.tracing.config import TraceConfig
+        from agent_seal.tracing.anthropic import _trace_anthropic_call
+        from agent_seal.tracing.config import TraceConfig
 
         response = MagicMock()
         response.model = "claude-haiku-3"
@@ -1926,8 +1926,8 @@ class TestAnthropicComprehensive:
 
     def test_audit_with_full_metadata_anthropic(self):
         """Audit event includes all expected fields for Anthropic."""
-        from agent_audit.tracing.anthropic import _trace_anthropic_call
-        from agent_audit.tracing.config import TraceConfig
+        from agent_seal.tracing.anthropic import _trace_anthropic_call
+        from agent_seal.tracing.config import TraceConfig
 
         mock_usage = MagicMock()
         mock_usage.input_tokens = 100
@@ -1948,7 +1948,7 @@ class TestAnthropicComprehensive:
         engine = MagicMock()
         config = TraceConfig(auto_audit=True, auto_cost=True)
 
-        with patch("agent_audit.tracing.anthropic.estimate_cost") as mock_cost:
+        with patch("agent_seal.tracing.anthropic.estimate_cost") as mock_cost:
             mock_cost.return_value = Decimal("0.003000")
             _trace_anthropic_call(
                 original=original,
@@ -1980,8 +1980,8 @@ class TestAnthropicComprehensive:
 
     def test_audit_not_called_when_auto_audit_false_anthropic(self):
         """auto_audit=False skips engine.log entirely for Anthropic."""
-        from agent_audit.tracing.anthropic import _trace_anthropic_call
-        from agent_audit.tracing.config import TraceConfig
+        from agent_seal.tracing.anthropic import _trace_anthropic_call
+        from agent_seal.tracing.config import TraceConfig
 
         content_block = MagicMock()
         content_block.text = "out"
@@ -2011,8 +2011,8 @@ class TestAnthropicComprehensive:
 
     def test_audit_with_no_engine_noop_anthropic(self):
         """When engine is None and auto_audit=True, no crash for Anthropic."""
-        from agent_audit.tracing.anthropic import _trace_anthropic_call
-        from agent_audit.tracing.config import TraceConfig
+        from agent_seal.tracing.anthropic import _trace_anthropic_call
+        from agent_seal.tracing.config import TraceConfig
 
         response = MagicMock()
         response.model = "claude-sonnet-4"
@@ -2038,8 +2038,8 @@ class TestAnthropicComprehensive:
 
     def test_audit_with_empty_content_anthropic(self):
         """When response has no content text, output_text is empty string."""
-        from agent_audit.tracing.anthropic import _trace_anthropic_call
-        from agent_audit.tracing.config import TraceConfig
+        from agent_seal.tracing.anthropic import _trace_anthropic_call
+        from agent_seal.tracing.config import TraceConfig
 
         response = MagicMock()
         response.model = "claude-opus-4"
@@ -2067,8 +2067,8 @@ class TestAnthropicComprehensive:
 
     def test_audit_exception_does_not_propagate_anthropic(self):
         """If engine.log raises, _trace_anthropic_call still returns the result."""
-        from agent_audit.tracing.anthropic import _trace_anthropic_call
-        from agent_audit.tracing.config import TraceConfig
+        from agent_seal.tracing.anthropic import _trace_anthropic_call
+        from agent_seal.tracing.config import TraceConfig
 
         response = MagicMock()
         response.model = "claude-sonnet-4"
@@ -2097,8 +2097,8 @@ class TestAnthropicComprehensive:
 
     def test_auto_cost_true_estimates_anthropic_cost(self):
         """When auto_cost=True, estimate_cost is called with correct args."""
-        from agent_audit.tracing.anthropic import _trace_anthropic_call
-        from agent_audit.tracing.config import TraceConfig
+        from agent_seal.tracing.anthropic import _trace_anthropic_call
+        from agent_seal.tracing.config import TraceConfig
 
         mock_usage = MagicMock()
         mock_usage.input_tokens = 1000
@@ -2115,7 +2115,7 @@ class TestAnthropicComprehensive:
         original = MagicMock(return_value=response)
         config = TraceConfig(auto_cost=True, auto_audit=False)
 
-        with patch("agent_audit.tracing.anthropic.estimate_cost") as mock_cost:
+        with patch("agent_seal.tracing.anthropic.estimate_cost") as mock_cost:
             mock_cost.return_value = Decimal("0.010500")
             _trace_anthropic_call(
                 original=original,
@@ -2134,12 +2134,12 @@ class TestAnthropicComprehensive:
 
     def test_auto_anthropic_tracing_install(self):
         """install_auto_anthropic_tracing activates the instrumentor."""
-        import agent_audit.tracing.auto as auto_mod
+        import agent_seal.tracing.auto as auto_mod
 
         saved = auto_mod._ANTHROPIC_INSTALLED
         auto_mod._ANTHROPIC_INSTALLED = False
         try:
-            with patch("agent_audit.tracing.anthropic.AnthropicInstrumentor") as mock_instr_cls:
+            with patch("agent_seal.tracing.anthropic.AnthropicInstrumentor") as mock_instr_cls:
                 mock_instr = MagicMock()
                 mock_instr_cls.return_value = mock_instr
 
@@ -2151,12 +2151,12 @@ class TestAnthropicComprehensive:
 
     def test_auto_anthropic_tracing_exception_returns_false(self):
         """install_auto_anthropic_tracing returns False on exception."""
-        import agent_audit.tracing.auto as auto_mod
+        import agent_seal.tracing.auto as auto_mod
 
         saved = auto_mod._ANTHROPIC_INSTALLED
         auto_mod._ANTHROPIC_INSTALLED = False
         try:
-            with patch("agent_audit.tracing.anthropic.AnthropicInstrumentor") as mock_instr_cls:
+            with patch("agent_seal.tracing.anthropic.AnthropicInstrumentor") as mock_instr_cls:
                 mock_instr = MagicMock()
                 mock_instr.install.side_effect = RuntimeError("nope")
                 mock_instr_cls.return_value = mock_instr

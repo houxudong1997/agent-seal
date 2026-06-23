@@ -1,5 +1,5 @@
 """
-Tests for agent_audit.hooks.langchain — AuditCallbackHandler.
+Tests for agent_seal.hooks.langchain — AuditCallbackHandler.
 
 All tests mock the langchain-base interfaces WITHOUT requiring the
 actual langchain package installed, per the spec: "模拟 langchain
@@ -99,7 +99,7 @@ def _mock_langchain_import() -> None:
 def mock_engine():
     """Return a MagicMock that stands in for AuditEngine."""
     with patch(
-        "agent_audit.hooks.langchain.get_engine", return_value=MagicMock()
+        "agent_seal.hooks.langchain.get_engine", return_value=MagicMock()
     ) as mock_get:
         engine = mock_get.return_value
         yield engine
@@ -108,7 +108,7 @@ def mock_engine():
 @pytest.fixture
 def handler(mock_engine):
     """A fresh AuditCallbackHandler with a mock engine."""
-    from agent_audit.hooks.langchain import AuditCallbackHandler
+    from agent_seal.hooks.langchain import AuditCallbackHandler
 
     return AuditCallbackHandler(agent_id="test-agent", session_id="test-sess-42")
 
@@ -121,7 +121,7 @@ class TestLangChainUnavailable:
 
     def test_raise_on_missing_langchain(self):
         """Raises RuntimeError when langchain is absent and raise_on_import_error=True."""
-        import agent_audit.hooks.langchain as lc_mod
+        import agent_seal.hooks.langchain as lc_mod
 
         saved = lc_mod._HAS_LANGCHAIN
         try:
@@ -139,7 +139,7 @@ class TestLangChainUnavailable:
 
     def test_base_class_fallback_on_missing_langchain(self):
         """BaseCallbackHandler falls back to object when langchain is absent."""
-        import agent_audit.hooks.langchain as lc_mod
+        import agent_seal.hooks.langchain as lc_mod
 
         saved = lc_mod._HAS_LANGCHAIN
         saved_base = lc_mod.BaseCallbackHandler
@@ -161,32 +161,32 @@ class TestAuditCallbackHandlerInit:
     """Constructor and session management."""
 
     def test_default_agent_id(self, mock_engine):
-        from agent_audit.hooks.langchain import AuditCallbackHandler
+        from agent_seal.hooks.langchain import AuditCallbackHandler
 
         h = AuditCallbackHandler()
         assert h.agent_id == "langchain-agent"
 
     def test_custom_agent_id(self, mock_engine):
-        from agent_audit.hooks.langchain import AuditCallbackHandler
+        from agent_seal.hooks.langchain import AuditCallbackHandler
 
         h = AuditCallbackHandler(agent_id="my-bot")
         assert h.agent_id == "my-bot"
 
     def test_auto_session_id(self, mock_engine):
-        from agent_audit.hooks.langchain import AuditCallbackHandler
+        from agent_seal.hooks.langchain import AuditCallbackHandler
 
         h = AuditCallbackHandler(agent_id="b", session_id=None)
         assert h.session_id  # Should be a generated UUID string
         assert len(h.session_id) == 36  # Standard UUID format
 
     def test_explicit_session_id(self, mock_engine):
-        from agent_audit.hooks.langchain import AuditCallbackHandler
+        from agent_seal.hooks.langchain import AuditCallbackHandler
 
         h = AuditCallbackHandler(agent_id="b", session_id="sess-001")
         assert h.session_id == "sess-001"
 
     def test_custom_prompt_version(self, mock_engine):
-        from agent_audit.hooks.langchain import AuditCallbackHandler
+        from agent_seal.hooks.langchain import AuditCallbackHandler
 
         h = AuditCallbackHandler(prompt_version="v2.3")
         assert h._prompt_version == "v2.3"
@@ -448,7 +448,7 @@ class TestRunTracker:
     """Tests for the internal _RunTracker helper."""
 
     def test_start_end_returns_ctx(self):
-        from agent_audit.hooks.langchain import _RunTracker
+        from agent_seal.hooks.langchain import _RunTracker
 
         tracker = _RunTracker()
         tracker.start("abc", "llm", {"a": 1})
@@ -459,13 +459,13 @@ class TestRunTracker:
         assert "start_ts" in ctx
 
     def test_end_on_missing_key_returns_none(self):
-        from agent_audit.hooks.langchain import _RunTracker
+        from agent_seal.hooks.langchain import _RunTracker
 
         tracker = _RunTracker()
         assert tracker.end("missing") is None
 
     def test_tracker_records_timing(self):
-        from agent_audit.hooks.langchain import _RunTracker
+        from agent_seal.hooks.langchain import _RunTracker
 
         tracker = _RunTracker()
         tracker.start("run-x", "tool")
@@ -476,7 +476,7 @@ class TestRunTracker:
         # Latency should be computed by the caller
 
     def test_clear_removes_all(self):
-        from agent_audit.hooks.langchain import _RunTracker
+        from agent_seal.hooks.langchain import _RunTracker
 
         tracker = _RunTracker()
         tracker.start("a", "llm")
@@ -507,7 +507,7 @@ class TestEventTypeCorrectness:
     def test_callback_records_correct_event_type(
         self, callback_name, expected_type, mock_engine
     ):
-        from agent_audit.hooks.langchain import AuditCallbackHandler
+        from agent_seal.hooks.langchain import AuditCallbackHandler
 
         h = AuditCallbackHandler(agent_id="a", session_id="s1")
 

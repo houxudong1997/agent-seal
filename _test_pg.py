@@ -5,8 +5,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from agent_audit.core.chain import ChainEvent, SessionChain
-from agent_audit.core.storage import PostgreSQLStore
+from agent_seal.core.chain import ChainEvent, SessionChain
+from agent_seal.core.storage import PostgreSQLStore
 
 N = 100  # small test
 RUNS = 3
@@ -24,7 +24,7 @@ def _make_event(session_id, seq):
         metadata={"seq": seq},
     )
 
-dsn = "postgresql://audit:***@localhost:5432/agent_audit"
+dsn = "postgresql://audit:***@localhost:5432/agent_seal"
 print(f"Connecting to PostgreSQL...")
 
 try:

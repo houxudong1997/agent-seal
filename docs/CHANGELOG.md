@@ -1,10 +1,10 @@
-# agent-audit v1.0.0 Release Notes
+# agent-seal v1.0.0 Release Notes
 
 > **Release Date**: 2026-06-22
 > **Codename**: "Tamper-Proof"
 > **Status**: Production/Stable
 
-agent-audit v1.0.0 is a complete architectural overhaul from v0.1.0, transforming
+agent-seal v1.0.0 is a complete architectural overhaul from v0.1.0, transforming
 a developer-focused JSONL audit trail into a production-grade, enterprise-ready
 audit system for AI agents — the first open-source solution purpose-built for
 **EU AI Act Article 12** compliance.
@@ -41,7 +41,7 @@ audit system for AI agents — the first open-source solution purpose-built for
 | **Code Quality** | None | Ruff (9 rulesets) + MyPy + structured logging |
 
 **The SHA-256 hash chain and Ed25519 signing — the cryptographic core that
-makes agent-audit tamper-evident — remains unchanged and fully backward
+makes agent-seal tamper-evident — remains unchanged and fully backward
 compatible.**
 
 ---
@@ -50,14 +50,14 @@ compatible.**
 
 ### 2.1 PostgreSQL Backend
 
-agent-audit now ships with a production-grade PostgreSQL storage backend,
+agent-seal now ships with a production-grade PostgreSQL storage backend,
 implementing the full `AuditStore` protocol alongside JSONL and SQLite.
 
 ```python
-from agent_audit.engine import create_store
+from agent_seal.engine import create_store
 
 # Zero-code backend swap
-store = create_store("postgresql://audit:***@host:5432/agent_audit")
+store = create_store("postgresql://audit:***@host:5432/agent_seal")
 ```
 
 - **Two PostgreSQL implementations**:
@@ -99,12 +99,12 @@ to FastAPI with full OpenAPI documentation at `/docs`.
 All settings are now driven by `.env` (28+ variables), following the 12-Factor App methodology:
 
 ```
-AGENT_AUDIT_DB_URL          — PostgreSQL / SQLite connection string
-AGENT_AUDIT_STORAGE_BACKEND — jsonl / sqlite / postgresql / postgresql-orm
-AGENT_AUDIT_SECRET_KEY      — HMAC secret (64-byte hex)
-AGENT_AUDIT_API_KEYS        — Comma-separated Bearer tokens
-AGENT_AUDIT_AUTO_TRACE      — Enable LLM auto-instrumentation
-AGENT_AUDIT_LOG_FORMAT      — text / json structured logging
+AGENT_SEAL_DB_URL          — PostgreSQL / SQLite connection string
+AGENT_SEAL_STORAGE_BACKEND — jsonl / sqlite / postgresql / postgresql-orm
+AGENT_SEAL_SECRET_KEY      — HMAC secret (64-byte hex)
+AGENT_SEAL_API_KEYS        — Comma-separated Bearer tokens
+AGENT_SEAL_AUTO_TRACE      — Enable LLM auto-instrumentation
+AGENT_SEAL_LOG_FORMAT      — text / json structured logging
 ... and 20+ more
 ```
 
@@ -114,10 +114,10 @@ A complete `.env.example` template is provided with inline documentation.
 
 ```python
 # Old (still works)
-from agent_audit.trail import AuditTrail
+from agent_seal.trail import AuditTrail
 
 # New (recommended)
-from agent_audit.engine import AuditEngine, create_store
+from agent_seal.engine import AuditEngine, create_store
 ```
 
 `AuditEngine` is the single, canonical entry point for all storage backends.
@@ -175,7 +175,7 @@ Pre-built **Grafana dashboard JSON** models are available for:
 
 ```bash
 # Generate a compliance report for any agent
-agent-audit report refund-bot --output compliance-2026.md
+agent-seal report refund-bot --output compliance-2026.md
 ```
 
 The report includes: agent identity, event timeline, prompt version history,
@@ -192,13 +192,13 @@ The largest pain point in v0.1 — every `trail.log()` call was manual — is
 eliminated. One line enables automatic tracing:
 
 ```python
-import agent_audit.tracing.auto  # Patch OpenAI + Anthropic SDK
+import agent_seal.tracing.auto  # Patch OpenAI + Anthropic SDK
 # All LLM calls are now auto-recorded: audit trail + llm_calls + cost tracking
 ```
 
 Or via environment variable:
 ```bash
-export AGENT_AUDIT_AUTO_TRACE=1
+export AGENT_SEAL_AUTO_TRACE=1
 ```
 
 ### 4.2 Supported Providers
@@ -226,7 +226,7 @@ the `events` table (for the hash-chained audit trail).
 ### 4.4 Fine-Grained Control
 
 ```python
-from agent_audit.tracing import TraceConfig, OpenAIInstrumentor
+from agent_seal.tracing import TraceConfig, OpenAIInstrumentor
 
 config = TraceConfig(
     auto_audit=True,          # Write to audit trail
@@ -347,7 +347,7 @@ See `docs/benchmark-v1.0.md` for full analysis.
 
 The architecture plans a clear, zero-downtime upgrade path:
 1. **Install PostgreSQL**: `pip install psycopg2-binary`
-2. **Migrate data**: `python -m agent_audit.migrate`
+2. **Migrate data**: `python -m agent_seal.migrate`
 3. **Enable TimescaleDB** (optional): `CREATE EXTENSION timescaledb; SELECT create_hypertable(...)`
 
 With PostgreSQL, all v1.0 targets (5k writes/s, 5ms queries, 200ms global verification) are expected to be met.
@@ -376,8 +376,8 @@ without modifying a single line of application code.
 ### Zero-Change Upgrade
 
 ```bash
-pip install --upgrade agent-audit
-agent-audit serve    # Works exactly as before — JSONL or SQLite auto-detected
+pip install --upgrade agent-seal
+agent-seal serve    # Works exactly as before — JSONL or SQLite auto-detected
 ```
 
 ### Enable New Features
@@ -387,10 +387,10 @@ agent-audit serve    # Works exactly as before — JSONL or SQLite auto-detected
 cp .env.example .env
 
 # 2. Set PostgreSQL (optional)
-# AGENT_AUDIT_DB_URL=postgresql://audit:***@localhost:5432/agent_audit
+# AGENT_SEAL_DB_URL=postgresql://audit:***@localhost:5432/agent_seal
 
 # 3. Enable LLM auto-tracing
-# AGENT_AUDIT_AUTO_TRACE=1
+# AGENT_SEAL_AUTO_TRACE=1
 
 # 4. Start with full stack
 docker compose up -d
@@ -415,7 +415,7 @@ See `docs/migration-guide.md` for step-by-step procedures:
 - **SSE real-time event stream** — `GET /api/v1/events/stream` with keepalive
 - **Svelte SPA dashboard** — compliance view, event browser, session integrity, SSE indicator
 - **Prometheus metrics** — 7 counters/gauges + pre-built Grafana dashboards
-- **LLM auto-instrumentation** — OpenAI, Anthropic, OpenTelemetry (`import agent_audit.tracing.auto`)
+- **LLM auto-instrumentation** — OpenAI, Anthropic, OpenTelemetry (`import agent_seal.tracing.auto`)
 - **Cost tracking** — per-model pricing, token counting, latency histograms
 - **`.env` configuration** — 28+ environment variables, 12-Factor App
 - **Docker Compose** — nginx + FastAPI + PostgreSQL + Redis, multi-stage build
@@ -485,7 +485,7 @@ See `docs/migration-guide.md` for step-by-step procedures:
 
 ---
 
-agent-audit v1.0.0 is the **first open-source audit trail purpose-built for
+agent-seal v1.0.0 is the **first open-source audit trail purpose-built for
 EU AI Act Article 12 compliance**. It combines cryptographic tamper-evidence
 (SHA-256 hash chains + Ed25519 signatures) with enterprise infrastructure
 (PostgreSQL, Docker, Kubernetes, Prometheus) and zero-invasion LLM tracing.

@@ -1,7 +1,7 @@
-"""Alembic environment configuration for agent-audit.
+"""Alembic environment configuration for agent-seal.
 
 Reads DATABASE_URL from the environment (or alembic.ini fallback),
-loads all ORM models via ``agent_audit.models.Base.metadata``.
+loads all ORM models via ``agent_seal.models.Base.metadata``.
 """
 
 import os
@@ -12,7 +12,7 @@ from sqlalchemy import engine_from_config, pool
 # ── Load our models so Base.metadata is populated ─────────────
 # This line MUST appear before any alembic API calls that reference
 # ``target_metadata`` — otherwise autogenerate produces empty migrations.
-from agent_audit.models import Base
+from agent_seal.models import Base
 from alembic import context
 
 # this is the Alembic Config object, which provides
@@ -23,8 +23,8 @@ config = context.config
 fileConfig(config.config_file_name) if config.config_file_name else None
 
 # Override sqlalchemy.url from env var if present (12-factor style)
-# Checks same variables as agent_audit.config.Config.db_url
-_db_url = os.getenv("AGENT_AUDIT_DB_URL") or os.getenv("DB_URL") or os.getenv("DATABASE_URL")
+# Checks same variables as agent_seal.config.Config.db_url
+_db_url = os.getenv("AGENT_SEAL_DB_URL") or os.getenv("DB_URL") or os.getenv("DATABASE_URL")
 if _db_url:
     config.set_main_option("sqlalchemy.url", _db_url)
 

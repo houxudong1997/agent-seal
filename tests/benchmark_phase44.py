@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase 4.4 Performance Benchmark — agent-audit v1.0
+Phase 4.4 Performance Benchmark — agent-seal v1.0
 ====================================================
 Covers all six Appendix A scenarios from architecture-v1.md:
 
@@ -39,8 +39,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from agent_audit.core.chain import ChainEvent, SessionChain  # noqa: E402
-from agent_audit.core.storage import (  # noqa: E402
+from agent_seal.core.chain import ChainEvent, SessionChain  # noqa: E402
+from agent_seal.core.storage import (  # noqa: E402
     JSONLStore,
     SQLiteStore,
     create_store,
@@ -70,7 +70,7 @@ WARMUP = 2
 RUNS = 5
 
 PG_AVAILABLE = False
-PG_DSN = os.getenv("AGENT_AUDIT_DB_URL", os.getenv("DATABASE_URL", ""))
+PG_DSN = os.getenv("AGENT_SEAL_DB_URL", os.getenv("DATABASE_URL", ""))
 try:
     if PG_DSN and PG_DSN.startswith(("postgresql://", "postgres://")):
         import psycopg2  # noqa: F401
@@ -430,7 +430,7 @@ def format_rate(r: float) -> str:
 
 def run_benchmarks():
     print("=" * 72)
-    print("  agent-audit v1.0 — Phase 4.4 Performance Benchmark")
+    print("  agent-seal v1.0 — Phase 4.4 Performance Benchmark")
     print("=" * 72)
     label = "QUICK MODE (1/10 scale)" if QUICK_MODE else "FULL SCALE"
     print(f"  Mode:       {label}")
@@ -444,7 +444,7 @@ def run_benchmarks():
         ("SQLite", SQLiteStore),
     ]
     if PG_AVAILABLE:
-        from agent_audit.core.storage import PostgreSQLStore
+        from agent_seal.core.storage import PostgreSQLStore
 
         backends.append(("PostgreSQL", PostgreSQLStore))
 
@@ -463,7 +463,7 @@ def run_benchmarks():
         print(f"  {sc_name}")
         print(f"{'─' * 72}")
         for be_name, _be_cls in backends:
-            tmpdir = tempfile.mkdtemp(prefix="agent_audit_bench_")
+            tmpdir = tempfile.mkdtemp(prefix="agent_seal_bench_")
             try:
                 if be_name == "PostgreSQL":
                     store = PostgreSQLStore(PG_DSN)
@@ -546,7 +546,7 @@ def run_benchmarks():
 
 def generate_markdown_report(results, backends, targets, scenarios):
     lines = []
-    lines.append("# agent-audit v1.0 — Phase 4.4 Performance Benchmark Report")
+    lines.append("# agent-seal v1.0 — Phase 4.4 Performance Benchmark Report")
     lines.append("")
     lines.append(f"> **Generated**: {datetime.now(UTC).isoformat()}")
     lines.append(f"> **Mode**: {'QUICK (1/10 scale)' if QUICK_MODE else 'FULL SCALE'}")
@@ -557,7 +557,7 @@ def generate_markdown_report(results, backends, targets, scenarios):
 
     lines.append("## 1. Executive Summary")
     lines.append("")
-    lines.append("This report presents the v1.0 performance baseline for the agent-audit storage ")
+    lines.append("This report presents the v1.0 performance baseline for the agent-seal storage ")
     lines.append("backends against the targets defined in [architecture-v1.md Appendix A]")
     lines.append("(../docs/architecture-v1.md#附录-a-性能基准目标-v10).")
     lines.append("")
@@ -679,12 +679,12 @@ def generate_markdown_report(results, backends, targets, scenarios):
         lines.append(f"PostgreSQL benchmarks were run against: `{PG_DSN}`.")
     else:
         lines.append("PostgreSQL benchmarks were **skipped**: psycopg2 not installed and/or ")
-        lines.append("AGENT_AUDIT_DB_URL environment variable not set.")
+        lines.append("AGENT_SEAL_DB_URL environment variable not set.")
         lines.append("")
         lines.append("To run PostgreSQL benchmarks:")
         lines.append("```bash")
         lines.append("pip install psycopg2-binary")
-        lines.append("export AGENT_AUDIT_DB_URL='postgresql://user:***@host:5432/agent_audit'")
+        lines.append("export AGENT_SEAL_DB_URL='postgresql://user:***@host:5432/agent_seal'")
         lines.append("python tests/benchmark_phase44.py")
         lines.append("```")
     lines.append("")
@@ -734,7 +734,7 @@ def generate_markdown_report(results, backends, targets, scenarios):
     lines.append("")
     lines.append(
         "1. **Deploy PostgreSQL** — the primary path to meeting all v1.0 targets. "
-        "Install `psycopg2-binary` and set `AGENT_AUDIT_DB_URL`, then re-run this benchmark."
+        "Install `psycopg2-binary` and set `AGENT_SEAL_DB_URL`, then re-run this benchmark."
     )
     lines.append(
         "2. **Implement `write_batch()`** — a single API call that accepts a list of "

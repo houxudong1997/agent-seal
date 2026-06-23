@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
-from agent_audit.core.chain import ChainEvent
-from agent_audit.storage import AuditEvent, SQLiteTrail
+from agent_seal.core.chain import ChainEvent
+from agent_seal.storage import AuditEvent, SQLiteTrail
 
 # ═══════════════════════════ FIXTURES ═══════════════════════════
 
@@ -15,7 +15,7 @@ from agent_audit.storage import AuditEvent, SQLiteTrail
 @pytest.fixture
 def mock_engine():
     """Mock AuditEngine so no real DB is created."""
-    with patch("agent_audit.storage.AuditEngine") as m:
+    with patch("agent_seal.storage.AuditEngine") as m:
         instance = m.return_value
         instance.log.return_value = ChainEvent(
             event_id="evt-001",
@@ -268,7 +268,7 @@ class TestExtraAPI:
         result = sqlite_trail.time_range()
         assert result is None
 
-    @patch("agent_audit.storage.sqlite3")
+    @patch("agent_seal.storage.sqlite3")
     def test_purge_before_deletes_old_events(self, mock_sqlite3, sqlite_trail):
         """purge_before runs a SQL DELETE directly."""
         mock_conn = mock_sqlite3.connect.return_value

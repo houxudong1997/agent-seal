@@ -4,7 +4,7 @@ Revision ID: 0001
 Revises: None
 Create Date: 2026-06-21T21:55:00Z
 
-Schema per architecture-v1.md §2.3 — PostgreSQL backend for agent-audit v1.0.
+Schema per architecture-v1.md §2.3 — PostgreSQL backend for agent-seal v1.0.
 All indexes and constraints match the architecture spec exactly.
 """
 from typing import Sequence, Union

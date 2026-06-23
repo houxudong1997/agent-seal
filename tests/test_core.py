@@ -2,9 +2,9 @@
 
 import tempfile
 
-from agent_audit.core.chain import SessionChain
-from agent_audit.core.storage import AuditEngine, JSONLStore, SQLiteStore
-from agent_audit.policy.engine import PolicyEngine, Verdict
+from agent_seal.core.chain import SessionChain
+from agent_seal.core.storage import AuditEngine, JSONLStore, SQLiteStore
+from agent_seal.policy.engine import PolicyEngine, Verdict
 
 
 class TestSessionChain:

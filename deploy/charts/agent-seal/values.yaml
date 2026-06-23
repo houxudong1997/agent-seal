@@ -1,0 +1,373 @@
+# ─────────────────────────────────────────────────────────────
+# agent-seal v1.0 — Helm Chart default values
+# ─────────────────────────────────────────────────────────────
+# Compatible with docker-compose.yml configuration.
+# All AGENT_SEAL_* env vars from docker-compose are mapped here.
+#
+# Quick start:
+#   helm install agent-seal ./deploy/charts/agent-seal
+#   helm install agent-seal ./deploy/charts/agent-seal \
+#     --set postgresql.enabled=false \
+#     --set externalDb.url=postgresql://user:pass@host:5432/agent_seal
+# ─────────────────────────────────────────────────────────────
+
+# ── Global ───────────────────────────────────────────────────
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+  # -- Common labels applied to all resources
+  commonLabels: {}
+
+# ── Image defaults ───────────────────────────────────────────
+image:
+  repository: agent-seal-api
+  tag: "1.0"
+  pullPolicy: IfNotPresent
+
+# ── Replica count and update strategy ────────────────────────
+replicaCount: 1
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+
+# ── API service ──────────────────────────────────────────────
+api:
+  # -- Internal container port (matches Dockerfile EXPOSE)
+  port: 8081
+  # -- Service type
+  serviceType: ClusterIP
+  # -- Service port
+  servicePort: 8081
+  # -- Resource limits/requests
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+  # -- Health check (matches docker-compose healthcheck)
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8081
+    initialDelaySeconds: 15
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8081
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # -- Pod annotations
+  podAnnotations: {}
+  # -- Pod security context
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  # -- Container security context
+  securityContext:
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  # -- Node selector
+  nodeSelector: {}
+  # -- Tolerations
+  tolerations: []
+  # -- Affinity
+  affinity: {}
+
+# ── Application configuration (becomes ConfigMap / Secret) ───
+config:
+  # ── Core ──
+  dbUrl: ""                         # AGENT_SEAL_DB_URL — auto-generated if postgresql.enabled=true
+  redisUri: ""                      # AGENT_SEAL_REDIS_URI — auto-generated if redis.enabled=true
+  secretKey: ""                     # AGENT_SEAL_SECRET_KEY — REQUIRED in production
+  # ── Storage ──
+  storageBackend: "postgresql"      # AGENT_SEAL_STORAGE_BACKEND
+  auditDir: "/app/audit_logs"       # AGENT_SEAL_AUDIT_DIR
+  # ── API ──
+  apiHost: "0.0.0.0"               # AGENT_SEAL_API_HOST
+  apiKeys: []                       # AGENT_SEAL_API_KEYS (comma-separated string)
+  corsOrigins: ""                   # AGENT_SEAL_CORS_ORIGINS — REQUIRED in production, set to your frontend domain
+  # ── LLM Tracing ──
+  autoTrace: false                  # AGENT_SEAL_AUTO_TRACE
+  tracePiiRedact: false             # AGENT_SEAL_TRACE_PII_REDACT
+  traceMaxLen: 4000                 # AGENT_SEAL_TRACE_MAX_LEN
+  traceCostModel: "openai"          # AGENT_SEAL_TRACE_COST_MODEL
+  # ── Logging ──
+  logLevel: "info"                  # AGENT_SEAL_LOG_LEVEL
+  logFormat: "json"                 # AGENT_SEAL_LOG_FORMAT
+  # ── Notifications (optional) ──
+  slackWebhook: ""                  # AGENT_SEAL_SLACK_WEBHOOK
+  smtpHost: ""                      # AGENT_SEAL_SMTP_HOST
+  notifyOnFailure: false            # AGENT_SEAL_NOTIFY_ON_FAILURE
+  # ── Signing & Encryption (optional) ──
+  signingKey: ""                    # AGENT_SEAL_SIGNING_KEY
+  encryptionKey: ""                 # AGENT_SEAL_ENCRYPTION_KEY
+  # ── Evidence (optional) ──
+  evidenceStore: ""                 # AGENT_SEAL_EVIDENCE_STORE
+
+# ── Audit logs persistent volume ─────────────────────────────
+auditLogs:
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    # storageClass: ""              # Uses global.storageClass if empty
+    annotations: {}
+
+# ── PostgreSQL sub-chart or external ──────────────────────────
+postgresql:
+  # -- Deploy internal PostgreSQL (set false for external DB)
+  enabled: true
+  image:
+    repository: postgres
+    tag: "15-alpine"
+    pullPolicy: IfNotPresent
+  auth:
+    username: audit
+    # ╔═══════════════════════════════════════════════════════════════════╗
+    # ║  CRITICAL SECURITY WARNING                                      ║
+    # ║                                                                 ║
+    # ║  This field MUST be set to a strong, unique password before     ║
+    # ║  deploying to ANY environment (including staging).              ║
+    # ║                                                                 ║
+    # ║  The empty default is INTENTIONAL — the StatefulSet will FAIL   ║
+    # ║  to start if the password is not provided (optional: false).    ║
+    # ║                                                                 ║
+    # ║  Production:  --set postgresql.auth.password=<strong-value>     ║
+    # ║  CI/CD:       Use a Kubernetes Secret or sealed-secrets         ║
+    # ║  Never:       Commit a real password to values.yaml or git      ║
+    # ║                                                                 ║
+    # ║  Generate a strong password:                                    ║
+    # ║    openssl rand -base64 32                                      ║
+    # ╚═══════════════════════════════════════════════════════════════════╝
+    password: ""                    # REQUIRED — must be set via --set postgresql.auth.password=...
+    database: agent_seal
+  service:
+    port: 5432
+  persistence:
+    enabled: true
+    size: 20Gi
+    # storageClass: ""
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  # -- Init SQL mounted from ConfigMap (matches deploy/init.sql)
+  initSql: |
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+    CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+    ALTER DATABASE agent_seal SET timezone TO 'UTC';
+    ALTER DATABASE agent_seal SET client_min_messages TO warning;
+    GRANT ALL PRIVILEGES ON DATABASE agent_seal TO audit;
+
+# -- External PostgreSQL connection (used when postgresql.enabled=false)
+externalDb:
+  url: ""                           # Full connection string: postgresql://user:pass@host:5432/db
+  # host: ""                        # Alternative: individual fields
+  # port: 5432
+  # user: audit
+  # password: ""
+  # database: agent_seal
+  # sslmode: require
+
+# ── Redis sub-chart or external ───────────────────────────────
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+  # -- Redis server arguments (matches docker-compose command)
+  args:
+    - --save 900 1
+    - --save 300 10
+    - --save 60 10000
+    - --maxmemory 256mb
+    - --maxmemory-policy allkeys-lru
+    - --appendonly yes
+  service:
+    port: 6379
+  persistence:
+    enabled: true
+    size: 8Gi
+    # storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  # -- liveness/readiness probe (redis-cli ping)
+  probes:
+    liveness:
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+
+# -- External Redis connection (used when redis.enabled=false)
+externalRedis:
+  uri: ""                           # Full connection string: redis://host:6379/0
+
+# ── NGINX reverse proxy ──────────────────────────────────────
+nginx:
+  enabled: true
+  image:
+    repository: nginx
+    tag: "1.27-alpine"
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    httpPort: 80
+    httpsPort: 443
+  # -- NGINX configuration (mounted as ConfigMap)
+  conf: |
+    upstream api_backend {
+        server {{ include "agent-seal.fullname" . }}-api:{{ .Values.api.servicePort }};
+    }
+
+    server {
+        listen 80;
+        server_name _;
+
+        # Health check endpoint (no auth)
+        location /health {
+            proxy_pass http://api_backend/health;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # API proxy
+        location /api/ {
+            proxy_pass http://api_backend/api/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+        }
+
+        # Static files / SPA
+        location / {
+            proxy_pass http://api_backend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# ── Ingress ──────────────────────────────────────────────────
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: agent-seal.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: agent-seal-tls
+  #    hosts:
+  #      - agent-seal.example.com
+
+# ── ServiceAccount ────────────────────────────────────────────
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# ── Pod Security Policy ──────────────────────────────────────
+podSecurityPolicy:
+  enabled: false
+
+# ── HorizontalPodAutoscaler (production) ──────────────────────
+hpa:
+  enabled: false
+  # -- Target deployment: "api" or "nginx"
+  target: api
+  minReplicas: 2
+  maxReplicas: 10
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 70
+  # -- Target memory utilization percentage (optional)
+  # targetMemoryUtilizationPercentage: 80
+
+# ── PodDisruptionBudget (production) ───────────────────────────
+pdb:
+  enabled: false
+  # -- Min available pods during voluntary disruptions
+  minAvailable: 1
+  # -- Alternative: maxUnavailable pods
+  # maxUnavailable: 1
+
+# ── NetworkPolicy (production) ─────────────────────────────────
+networkPolicy:
+  enabled: false
+  # -- Additional ingress CIDR blocks (e.g., monitoring, VPN)
+  extraIngressCIDRs: []
+  #   - 10.100.0.0/16
+
+# ── Prometheus ServiceMonitor (optional) ──────────────────────
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  path: /metrics
+
+# ── Grafana Dashboard Provisioning (optional) ──────────────────
+# Provisions pre-built dashboards via ConfigMap for Grafana's
+# dashboard sidecar auto-discovery (label: grafana_dashboard: "1").
+# Dashboard JSON files live in dashboards/ within the chart.
+grafana:
+  # -- Enable Grafana dashboard ConfigMap provisioning.
+  # Requires grafana-sc-dashboard sidecar in your Grafana deployment.
+  enabled: false

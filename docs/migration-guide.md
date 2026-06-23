@@ -1,4 +1,4 @@
-# agent-audit Storage Migration Guide
+# agent-seal Storage Migration Guide
 
 > How to migrate between JSONL, SQLite, and PostgreSQL storage backends — from local dev to enterprise production.
 
@@ -22,7 +22,7 @@
 
 ## 1. Storage Backend Overview
 
-agent-audit provides three pluggable storage backends, all implementing the same `AuditStore` protocol. Swap backends without changing any application code.
+agent-seal provides three pluggable storage backends, all implementing the same `AuditStore` protocol. Swap backends without changing any application code.
 
 | Backend | Best for | Concurrency | Query Support | Production Ready |
 |---|---|---|---|---|
@@ -52,7 +52,7 @@ A single SQLite database file with an `events` table and indexes on `session_id`
 ### PostgreSQL (Server-based)
 
 ```
-agent_audit database
+agent_seal database
 ├── events table         # Core audit events (JSONB metadata)
 ├── llm_calls table      # LLM call tracing (v1.0+)
 ├── prompt_versions table # Prompt version history
@@ -68,16 +68,16 @@ Full ACID compliance, concurrent writes, JSONB indexes, connection pooling (via 
 
 | From | To | Tool | Command |
 |---|---|---|---|
-| JSONL | SQLite | `agent_audit.migrate.jsonl_to_sqlite()` | See [§4.1](#41-jsonl--sqlite) |
+| JSONL | SQLite | `agent_seal.migrate.jsonl_to_sqlite()` | See [§4.1](#41-jsonl--sqlite) |
 | JSONL | PostgreSQL | pgloader or custom script | See [§4.2](#42-jsonl--postgresql) |
 | SQLite | PostgreSQL | pgloader | `pgloader audit.db postgresql://...` |
-| Any | Any | Config change (cold) | Change `AGENT_AUDIT_DB_URL` and restart |
+| Any | Any | Config change (cold) | Change `AGENT_SEAL_DB_URL` and restart |
 
 ---
 
 ## 3. Backend Selection
 
-The storage backend is determined by the `AGENT_AUDIT_DB_URL` environment variable (or `--store-uri` in code). agent-audit auto-detects the backend from the URI scheme.
+The storage backend is determined by the `AGENT_SEAL_DB_URL` environment variable (or `--store-uri` in code). agent-seal auto-detects the backend from the URI scheme.
 
 ### Auto-Detection Rules
 
@@ -91,7 +91,7 @@ audit.db                              →  SQLiteStore      (.db extension)
 
 ### Explicit Backend Override
 
-Set `AGENT_AUDIT_STORAGE_BACKEND` to force a specific backend regardless of URI:
+Set `AGENT_SEAL_STORAGE_BACKEND` to force a specific backend regardless of URI:
 
 | Value | Backend | Notes |
 |---|---|---|
@@ -104,14 +104,14 @@ Set `AGENT_AUDIT_STORAGE_BACKEND` to force a specific backend regardless of URI:
 ### Code Example
 
 ```python
-from agent_audit.core.storage import create_store
+from agent_seal.core.storage import create_store
 
 # Auto-detect from URI
-store = create_store("postgresql://audit:***@localhost:5432/agent_audit")
+store = create_store("postgresql://audit:***@localhost:5432/agent_seal")
 
 # Force backend
 store = create_store(
-    "postgresql://audit:***@localhost:5432/agent_audit",
+    "postgresql://audit:***@localhost:5432/agent_seal",
     backend="postgresql-orm"
 )
 ```
@@ -129,13 +129,13 @@ Best for adding SQL query support to an existing JSONL trail.
 ```bash
 # Migrate all JSONL files in a directory to a SQLite database
 python -c "
-from agent_audit.core.storage import create_store, AuditEngine
+from agent_seal.core.storage import create_store, AuditEngine
 
 # Read from JSONL
 jsonl_engine = AuditEngine('./audit_logs')
 
 # Write to SQLite
-import os; os.environ['AGENT_AUDIT_STORAGE_BACKEND'] = 'sqlite'
+import os; os.environ['AGENT_SEAL_STORAGE_BACKEND'] = 'sqlite'
 sqlite_engine = AuditEngine('sqlite://audit_new.db')
 
 # Copy all events
@@ -165,8 +165,8 @@ jsonl_engine.close()
 
 ```bash
 # Change .env or env var
-export AGENT_AUDIT_DB_URL=sqlite://audit.db
-agent-audit serve
+export AGENT_SEAL_DB_URL=sqlite://audit.db
+agent-seal serve
 ```
 
 New events go to SQLite. Old JSONL events remain in the old directory. No data loss, but old data is split across backends. Use for greenfield migrations where historical data isn't critical.
@@ -183,7 +183,7 @@ Best for moving from local dev to production.
 pip install psycopg2-binary
 
 # Create the database
-createdb agent_audit
+createdb agent_seal
 ```
 
 #### Option A: Bulk import with a migration script
@@ -195,7 +195,7 @@ import json
 import sys
 from pathlib import Path
 
-from agent_audit.core.storage import create_store
+from agent_seal.core.storage import create_store
 
 def migrate(jsonl_dir: str, pg_dsn: str) -> int:
     """Import all JSONL files into PostgreSQL. Returns event count."""
@@ -211,7 +211,7 @@ def migrate(jsonl_dir: str, pg_dsn: str) -> int:
         events = jsonl_store.read_session(sid)
         for e in events:
             # Reconstruct a ChainEvent and write
-            from agent_audit.core.chain import ChainEvent
+            from agent_seal.core.chain import ChainEvent
             event = ChainEvent(
                 event_id=e.get("event_id", ""),
                 session_id=e.get("session_id", sid),
@@ -246,7 +246,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-python migrate_jsonl_to_pg.py ./audit_logs "postgresql://audit:pass@localhost:5432/agent_audit"
+python migrate_jsonl_to_pg.py ./audit_logs "postgresql://audit:pass@localhost:5432/agent_seal"
 ```
 
 #### Option B: Using pgloader (advanced)
@@ -262,7 +262,7 @@ For very large datasets (>100k events), pgloader is faster:
 cat > migrate.load <<'EOF'
 LOAD CSV
   FROM 'audit_logs/all_events.csv'
-  INTO postgresql://audit:pass@localhost:5432/agent_audit
+  INTO postgresql://audit:pass@localhost:5432/agent_seal
   TARGET TABLE events
   WITH
     fields terminated by ',',
@@ -315,8 +315,8 @@ Best for scaling up from single-server to multi-server deployment.
 import sqlite3
 import sys
 
-from agent_audit.core.storage import create_store
-from agent_audit.core.chain import ChainEvent
+from agent_seal.core.storage import create_store
+from agent_seal.core.chain import ChainEvent
 
 def migrate(sqlite_path: str, pg_dsn: str) -> int:
     sqlite_db = sqlite3.connect(sqlite_path)
@@ -366,7 +366,7 @@ if __name__ == "__main__":
 pgloader has native SQLite support:
 
 ```bash
-pgloader audit.db postgresql://audit:pass@localhost:5432/agent_audit
+pgloader audit.db postgresql://audit:pass@localhost:5432/agent_seal
 ```
 
 ---
@@ -380,7 +380,7 @@ The recommended production deployment uses Docker Compose with PostgreSQL:
 cp .env.example .env
 # Edit .env with your values:
 #   POSTGRES_PASSWORD=<strong-password>
-#   AGENT_AUDIT_SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
+#   AGENT_SEAL_SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
 
 # 2. Import existing data (if migrating)
 #    Run one of the migration scripts from §4 against your local PostgreSQL
@@ -415,12 +415,12 @@ curl http://localhost/health
 |---|---|---|
 | `POSTGRES_USER` | Yes | `audit` |
 | `POSTGRES_PASSWORD` | Yes | `change-me-in-production` |
-| `POSTGRES_DB` | Yes | `agent_audit` |
-| `AGENT_AUDIT_DB_URL` | Yes | `postgresql://audit:***@db:5432/agent_audit` |
-| `AGENT_AUDIT_SECRET_KEY` | Yes | 64 hex chars |
-| `AGENT_AUDIT_API_KEYS` | Recommended | `key1,key2` |
-| `AGENT_AUDIT_SIGNING_KEY` | Optional | `/etc/secrets/ed25519.pem` |
-| `AGENT_AUDIT_ENCRYPTION_KEY` | Optional | 32 hex bytes |
+| `POSTGRES_DB` | Yes | `agent_seal` |
+| `AGENT_SEAL_DB_URL` | Yes | `postgresql://audit:***@db:5432/agent_seal` |
+| `AGENT_SEAL_SECRET_KEY` | Yes | 64 hex chars |
+| `AGENT_SEAL_API_KEYS` | Recommended | `key1,key2` |
+| `AGENT_SEAL_SIGNING_KEY` | Optional | `/etc/secrets/ed25519.pem` |
+| `AGENT_SEAL_ENCRYPTION_KEY` | Optional | 32 hex bytes |
 
 ---
 
@@ -456,7 +456,7 @@ Phase 4 (Cleanup):
 #### Implementation Sketch
 
 ```python
-from agent_audit.core.storage import AuditEngine
+from agent_seal.core.storage import AuditEngine
 
 class DualWriteEngine:
     """Write to both old and new backends during migration."""
@@ -517,10 +517,10 @@ The `PostgreSQLStore` auto-creates the `events` table on first use. If it doesn'
 
 ```bash
 # Check if the table exists
-psql -U audit -d agent_audit -c "\dt events"
+psql -U audit -d agent_seal -c "\dt events"
 
 # Create manually if needed
-psql -U audit -d agent_audit <<'SQL'
+psql -U audit -d agent_seal <<'SQL'
 CREATE TABLE IF NOT EXISTS events (
     id BIGSERIAL PRIMARY KEY,
     event_id TEXT NOT NULL,
@@ -570,9 +570,9 @@ After migration, verify everything:
 ```bash
 # 1. Check data counts match
 python -c "
-from agent_audit.core.storage import create_store
+from agent_seal.core.storage import create_store
 old = create_store('./audit_logs', backend='jsonl')
-new = create_store('postgresql://audit:***@localhost:5432/agent_audit', backend='postgresql')
+new = create_store('postgresql://audit:***@localhost:5432/agent_seal', backend='postgresql')
 print('Old:', old.stats())
 print('New:', new.stats())
 old.close()
@@ -581,8 +581,8 @@ new.close()
 
 # 2. Verify hash chains (per session)
 python -c "
-from agent_audit.core.storage import create_store
-store = create_store('postgresql://audit:***@localhost:5432/agent_audit', backend='postgresql')
+from agent_seal.core.storage import create_store
+store = create_store('postgresql://audit:***@localhost:5432/agent_seal', backend='postgresql')
 for sid in store.sessions():
     ok = store.verify_session(sid)
     status = '✅' if ok else '❌ BROKEN'
@@ -591,12 +591,12 @@ store.close()
 "
 
 # 3. Start the API and check health
-agent-audit serve &
+agent-seal serve &
 curl http://localhost:8081/health
 
 # 4. Update .env for production
-export AGENT_AUDIT_DB_URL=postgresql://audit:***@localhost:5432/agent_audit
-export AGENT_AUDIT_STORAGE_BACKEND=postgresql
+export AGENT_SEAL_DB_URL=postgresql://audit:***@localhost:5432/agent_seal
+export AGENT_SEAL_STORAGE_BACKEND=postgresql
 
 # 5. Archive old data
 tar -czf audit_logs_archive.tar.gz audit_logs/

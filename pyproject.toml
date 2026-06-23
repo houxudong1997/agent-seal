@@ -3,17 +3,17 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-audit"
+name = "agent-seal"
 version = "1.1.0"
 description = "Tamper-evident audit trail for AI agents — EU AI Act ready"
 authors = [{ name = "Mr.H" }]
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -42,18 +42,17 @@ postgresql = ["psycopg2-binary>=2.9"]
 all = ["psycopg2-binary>=2.9"]
 
 [project.scripts]
-agent-audit = "agent_audit.cli:main"
+agent-seal = "agent_seal.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["agent_audit*"]
+include = ["agent_seal*"]
 
 [tool.setuptools]
 include-package-data = true
-license-files = ["LICENSE"]
 
 [tool.setuptools.package-data]
-agent_audit = ["py.typed"]
+agent_seal = ["py.typed"]
 
 # ── Ruff ───────────────────────────────────────────────────────
 [tool.ruff]
@@ -83,7 +82,7 @@ ignore = [
 "alembic/versions/**" = ["F401", "F841"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["agent_audit"]
+known-first-party = ["agent_seal"]
 
 [tool.ruff.format]
 quote-style = "double"

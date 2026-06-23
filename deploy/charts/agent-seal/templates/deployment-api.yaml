@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "agent-seal.fullname" . }}-api
+  labels:
+    app.kubernetes.io/component: api
+    {{- include "agent-seal.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    {{- toYaml .Values.updateStrategy | nindent 4 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: api
+      {{- include "agent-seal.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.api.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        app.kubernetes.io/component: api
+        {{- include "agent-seal.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "agent-seal.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.api.podSecurityContext | nindent 8 }}
+      containers:
+        - name: api
+          image: {{ include "agent-seal.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.api.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "agent-seal.fullname" . }}-config
+            - secretRef:
+                name: {{ include "agent-seal.fullname" . }}-secret
+          livenessProbe:
+            {{- toYaml .Values.api.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.api.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          volumeMounts:
+            - name: audit-logs
+              mountPath: {{ .Values.config.auditDir }}
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: audit-logs
+          {{- if .Values.auditLogs.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "agent-seal.fullname" . }}-audit-logs
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.api.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.api.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.api.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

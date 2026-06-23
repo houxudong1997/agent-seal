@@ -68,17 +68,17 @@ print("=" * 60)
 print("1. Environment variable: setdefault verification")
 print("=" * 60)
 
-assert "os.environ.setdefault(\"AGENT_AUDIT_DB_URL\"" in source, \
-    "Line setting AGENT_AUDIT_DB_URL must use os.environ.setdefault()"
-print("  PASS: AGENT_AUDIT_DB_URL uses os.environ.setdefault()")
+assert "os.environ.setdefault(\"AGENT_SEAL_DB_URL\"" in source, \
+    "Line setting AGENT_SEAL_DB_URL must use os.environ.setdefault()"
+print("  PASS: AGENT_SEAL_DB_URL uses os.environ.setdefault()")
 
-# Verify no direct os.environ[] assignment to AGENT_AUDIT_DB_URL exists
+# Verify no direct os.environ[] assignment to AGENT_SEAL_DB_URL exists
 lines = source.split("\n")
 for i, line in enumerate(lines, 1):
-    if "AGENT_AUDIT_DB_URL" in line and "os.environ" in line:
+    if "AGENT_SEAL_DB_URL" in line and "os.environ" in line:
         assert "setdefault" in line and "os.environ[" not in line, \
             f"  FAIL: Line {i} uses direct assignment instead of setdefault: {line.strip()}"
-print("  PASS: No direct os.environ[] assignment to AGENT_AUDIT_DB_URL")
+print("  PASS: No direct os.environ[] assignment to AGENT_SEAL_DB_URL")
 print()
 
 # ═══════════════════════════════════════════════════════════════════
@@ -223,7 +223,7 @@ print()
 print("=" * 60)
 print("  ALL TESTS PASSED  ✅")
 print("=" * 60)
-print(f"  Fix 1: setdefault for AGENT_AUDIT_DB_URL         ✅")
+print(f"  Fix 1: setdefault for AGENT_SEAL_DB_URL         ✅")
 print(f"  Fix 2: try/finally connection leak protection     ✅")
 print(f"         (12 PostgreSQLStore usages protected)")
 print(f"  Fix 3: sc4 PASS/FAIL thresholds correct           ✅")

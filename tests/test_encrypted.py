@@ -2,7 +2,7 @@
 
 import tempfile
 
-from agent_audit.core.encrypted import EncryptedStore, generate_master_key
+from agent_seal.core.encrypted import EncryptedStore, generate_master_key
 
 
 def test_write_and_read():

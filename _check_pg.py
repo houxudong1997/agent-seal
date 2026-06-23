@@ -6,5 +6,5 @@ try:
 except ImportError as e:
     print("psycopg2 FAIL:", e)
 # Check env
-dsn = os.getenv("AGENT_AUDIT_DB_URL", "NOT SET")
-print("AGENT_AUDIT_DB_URL:", dsn[:50] + "..." if len(dsn) > 50 else dsn)
+dsn = os.getenv("AGENT_SEAL_DB_URL", "NOT SET")
+print("AGENT_SEAL_DB_URL:", dsn[:50] + "..." if len(dsn) > 50 else dsn)

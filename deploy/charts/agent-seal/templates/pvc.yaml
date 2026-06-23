@@ -1,0 +1,21 @@
+{{- if .Values.auditLogs.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "agent-seal.fullname" . }}-audit-logs
+  labels:
+    {{- include "agent-seal.labels" . | nindent 4 }}
+  {{- with .Values.auditLogs.persistence.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    - {{ .Values.auditLogs.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.auditLogs.persistence.size }}
+  {{- if or .Values.auditLogs.persistence.storageClass .Values.global.storageClass }}
+  storageClassName: {{ default .Values.global.storageClass .Values.auditLogs.persistence.storageClass }}
+  {{- end }}
+{{- end }}

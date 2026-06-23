@@ -1,5 +1,5 @@
 """
-Edge case, error path, and large payload tests for agent-audit.
+Edge case, error path, and large payload tests for agent-seal.
 
 Covers:
   - Empty / very long / special character inputs
@@ -20,8 +20,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from agent_audit.engine import AuditEngine
-from agent_audit.config import config
+from agent_seal.engine import AuditEngine
+from agent_seal.config import config
 
 
 # ═══════════════════════ EDGE CASES ═══════════════════════
@@ -289,9 +289,9 @@ class TestEngineErrorPaths:
 
     def test_config_not_crash(self, monkeypatch):
         for key in list(os.environ.keys()):
-            if "AGENT_AUDIT" in key:
+            if "AGENT_SEAL" in key:
                 monkeypatch.delenv(key, raising=False)
-        from agent_audit.config import config as cfg
+        from agent_seal.config import config as cfg
         assert cfg is not None
 
     def test_sqlite_empty_session(self, tmp_path):

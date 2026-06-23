@@ -1,6 +1,6 @@
 """Tests for cli_utils.py — terminal formatting utilities (0% baseline)."""
 
-from agent_audit.cli_utils import ok, fail, warn, info, dim, bold, table, progress_bar, C
+from agent_seal.cli_utils import ok, fail, warn, info, dim, bold, table, progress_bar, C
 
 
 class TestAnsiColors:

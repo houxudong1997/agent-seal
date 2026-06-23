@@ -1,0 +1,23 @@
+{{- if .Values.nginx.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "agent-seal.fullname" . }}-nginx
+  labels:
+    app.kubernetes.io/component: nginx
+    {{- include "agent-seal.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.nginx.service.type }}
+  ports:
+    - port: {{ .Values.nginx.service.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: {{ .Values.nginx.service.httpsPort }}
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    app.kubernetes.io/component: nginx
+    {{- include "agent-seal.selectorLabels" . | nindent 4 }}
+{{- end }}

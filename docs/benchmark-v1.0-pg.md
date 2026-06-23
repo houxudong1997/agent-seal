@@ -1,4 +1,4 @@
-# agent-audit v1.0 — Phase 4.4 Performance Benchmark Report
+# agent-seal v1.0 — Phase 4.4 Performance Benchmark Report
 
 > **Generated**: 2026-06-21T23:20:06.391064+00:00
 > **Mode**: QUICK (1/10 scale)
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-This report presents the v1.0 performance baseline for the agent-audit storage 
+This report presents the v1.0 performance baseline for the agent-seal storage 
 backends against the targets defined in [architecture-v1.md Appendix A]
 (../docs/architecture-v1.md#附录-a-性能基准目标-v10).
 
@@ -121,7 +121,7 @@ _Note: ▲/▼ indicates direction relative to baseline. For throughput metrics 
 
 ## 6. PostgreSQL Availability
 
-PostgreSQL benchmarks were run against: `postgresql://audit:***@localhost:5432/agent_audit`.
+PostgreSQL benchmarks were run against: `postgresql://audit:***@localhost:5432/agent_seal`.
 
 ## 7. Environment
 
@@ -143,7 +143,7 @@ PostgreSQL benchmarks were run against: `postgresql://audit:***@localhost:5432/a
 
 The v1.0 JSONL/SQLite backends are production-ready for single-node deployments and significantly outperform the v0.1 baselines across most scenarios.
 
-1. **Deploy PostgreSQL** — the primary path to meeting all v1.0 targets. Install `psycopg2-binary` and set `AGENT_AUDIT_DB_URL`, then re-run this benchmark.
+1. **Deploy PostgreSQL** — the primary path to meeting all v1.0 targets. Install `psycopg2-binary` and set `AGENT_SEAL_DB_URL`, then re-run this benchmark.
 2. **Implement `write_batch()`** — a single API call that accepts a list of events and uses multi-row INSERT for bulk throughput.
 3. **Add GIN/FTS indexes** — enable indexed full-text search on `input_snapshot` and `output_snapshot` columns.
 4. **Parallel chain verification** — verify sessions concurrently instead of sequentially to bring global verification under 200ms.

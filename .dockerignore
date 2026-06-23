@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────
-# agent-audit .dockerignore — Multi-stage Docker build exclusion
+# agent-seal .dockerignore — Multi-stage Docker build exclusion
 # ─────────────────────────────────────────────────────────────
 # Prevents host artifacts from bloating the Docker build context.
 # Sent to Docker daemon on `docker build` (and `docker compose build`).

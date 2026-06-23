@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────
-# agent-audit v1.0 — Multi-stage Docker build
+# agent-seal v1.0 — Multi-stage Docker build
 # ─────────────────────────────────────────────────────────────
 #
 # Stages:
@@ -7,8 +7,8 @@
 #   builder     — compile Python dependencies, prepare wheels
 #   production  — minimal runtime image (no build tools)
 #
-# Build:  docker build --target production -t agent-audit-api:1.0 .
-# Dev:    docker build --target builder -t agent-audit-dev .
+# Build:  docker build --target production -t agent-seal-api:1.0 .
+# Dev:    docker build --target builder -t agent-seal-dev .
 
 # ═══════════════════ STAGE 0: SPA Builder ═══════════════════
 FROM node:20-alpine AS spa-builder
@@ -20,7 +20,7 @@ COPY spa/package.json spa/package-lock.json ./
 RUN npm ci
 
 # Copy SPA source and build
-# Output directory: ../agent_audit/server/static (configured in vite.config.ts outDir)
+# Output directory: ../agent_seal/server/static (configured in vite.config.ts outDir)
 COPY spa/ ./
 RUN npm run build
 
@@ -47,16 +47,16 @@ RUN python -m venv /opt/venv && \
 COPY . .
 
 # Copy built SPA files from spa-builder stage
-COPY --from=spa-builder /app/agent_audit/server/static ./agent_audit/server/static
+COPY --from=spa-builder /app/agent_seal/server/static ./agent_seal/server/static
 
 # ═══════════════════ STAGE 2: Production ═════════════════════
 FROM python:3.11-slim AS production
 
-LABEL org.opencontainers.image.title="agent-audit"
+LABEL org.opencontainers.image.title="agent-seal"
 LABEL org.opencontainers.image.description="Tamper-evident audit trail for AI agents"
 LABEL org.opencontainers.image.version="1.0.0"
 LABEL org.opencontainers.image.authors="Mr.H"
-LABEL org.opencontainers.image.source="https://github.com/agent-audit/agent-audit"
+LABEL org.opencontainers.image.source="https://github.com/agent-seal/agent-seal"
 
 # Install runtime deps only (no build tools)
 RUN apt-get update -qq && \
@@ -66,7 +66,7 @@ RUN apt-get update -qq && \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-RUN groupadd -r agentaudit && useradd -r -g agentaudit -d /app agentaudit
+RUN groupadd -r agentseal && useradd -r -g agentseal -d /app agentseal
 
 WORKDIR /app
 
@@ -74,7 +74,7 @@ WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 
 # Copy application source
-COPY --from=builder /app/agent_audit ./agent_audit
+COPY --from=builder /app/agent_seal ./agent_seal
 COPY --from=builder /app/setup.py ./
 
 # Copy Alembic migration files (for `alembic upgrade head` at container start)
@@ -91,10 +91,10 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # Create volume mount point
-RUN mkdir -p /app/audit_logs && chown -R agentaudit:agentaudit /app
+RUN mkdir -p /app/audit_logs && chown -R agentseal:agentseal /app
 
 # Switch to non-root user
-USER agentaudit
+USER agentseal
 
 EXPOSE 8081
 VOLUME ["/app/audit_logs"]

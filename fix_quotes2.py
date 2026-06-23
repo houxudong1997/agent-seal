@@ -2,7 +2,7 @@
 """Fix missing closing quotes - use whole-file string replacement"""
 import pathlib
 
-doc_path = pathlib.Path(r'F:\workstation\projects\agent-audit\docs\api-v1.md')
+doc_path = pathlib.Path(r'F:\workstation\projects\agent-seal\docs\api-v1.md')
 content = doc_path.read_text(encoding='utf-8')
 
 # Check exactly what we're dealing with

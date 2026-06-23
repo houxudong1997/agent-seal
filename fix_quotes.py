@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fix missing closing quotes in curl commands in api-v1.md"""
 
-doc_path = r'F:\workstation\projects\agent-audit\docs\api-v1.md'
+doc_path = r'F:\workstation\projects\agent-seal\docs\api-v1.md'
 
 with open(doc_path, 'r', encoding='utf-8') as f:
     lines = f.readlines()

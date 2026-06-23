@@ -1,4 +1,4 @@
-# agent-audit v1.0 — Phase 4.4 Performance Benchmark Report
+# agent-seal v1.0 — Phase 4.4 Performance Benchmark Report
 
 > **Generated**: 2026-06-22T08:12:00+00:00
 > **Mode**: QUICK (1/10 scale)
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-This report establishes the v1.0 performance baseline for the agent-audit storage
+This report establishes the v1.0 performance baseline for the agent-seal storage
 backends (JSONL, SQLite, PostgreSQL), measured against the targets defined in
 [architecture-v1.md Appendix A](../docs/architecture-v1.md#附录-a-性能基准目标-v10).
 
@@ -124,7 +124,7 @@ _Note: ▲/▼ indicates direction relative to baseline. For throughput metrics 
 ## 6. PostgreSQL Benchmark Results
 
 PostgreSQL benchmarks were run against the embedded `pg_embedded` instance
-(`postgresql://audit:***@127.0.0.1:5432/agent_audit`, PG 17.10).
+(`postgresql://audit:***@127.0.0.1:5432/agent_seal`, PG 17.10).
 
 ### 6.1 Results vs v1.0 Targets
 
@@ -143,7 +143,7 @@ The PostgreSQL backend's write throughput is **~100–300× below target** becau
 `PostgreSQLStore.write()` calls `conn.commit()` on **every single INSERT**:
 
 ```python
-# agent_audit/core/storage.py, lines 390–425
+# agent_seal/core/storage.py, lines 390–425
 def write(self, event: ChainEvent) -> None:
     conn = self._pool.getconn()
     try:
@@ -187,7 +187,7 @@ PostgreSQL benchmarks were run using the `pg_embedded` development instance:
 cd pg_embedded && start.bat
 
 # Set connection string
-set AGENT_AUDIT_DB_URL=postgresql://audit:***@127.0.0.1:5432/agent_audit
+set AGENT_SEAL_DB_URL=postgresql://audit:***@127.0.0.1:5432/agent_seal
 
 # Run benchmark
 python bench_pg_only.py          # full scale

@@ -1,5 +1,5 @@
 """
-Tests for the LangChain CallbackHandler (agent_audit/integrations.py).
+Tests for the LangChain CallbackHandler (agent_seal/integrations.py).
 
 Coverage:
   - Callback lifecycle: on_llm_start→on_llm_end, on_tool_start→on_tool_end,
@@ -54,7 +54,7 @@ class TestCallbackLifecycle:
 
     def test_on_llm_start_logs_model_request(self, mock_engine):
         """on_llm_start should log a model_request event."""
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         handler = langchain_audit_callback(mock_engine)
 
@@ -70,7 +70,7 @@ class TestCallbackLifecycle:
 
     def test_on_tool_start_logs_tool_call(self, mock_engine):
         """on_tool_start should log a tool_call event."""
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         handler = langchain_audit_callback(mock_engine)
 
@@ -85,7 +85,7 @@ class TestCallbackLifecycle:
 
     def test_on_tool_end_logs_tool_result(self, mock_engine):
         """on_tool_end should log a tool_result event."""
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         handler = langchain_audit_callback(mock_engine)
 
@@ -98,7 +98,7 @@ class TestCallbackLifecycle:
 
     def test_on_agent_action_logs_decision(self, mock_engine):
         """on_agent_action should log a decision event."""
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         handler = langchain_audit_callback(mock_engine)
 
@@ -115,7 +115,7 @@ class TestCallbackLifecycle:
 
     def test_on_agent_finish_logs_agent_finish(self, mock_engine):
         """on_agent_finish should log an agent_finish event."""
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         handler = langchain_audit_callback(mock_engine)
 
@@ -131,7 +131,7 @@ class TestCallbackLifecycle:
 
     def test_full_lifecycle(self, mock_engine):
         """Simulate a complete LLM→Tool→Finish sequence."""
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         handler = langchain_audit_callback(mock_engine)
 
@@ -159,7 +159,7 @@ class TestCallbackLifecycle:
 
     def test_callback_has_session_id(self, mock_engine):
         """Each callback instance should have a unique session_id."""
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         handler1 = langchain_audit_callback(mock_engine)
         handler2 = langchain_audit_callback(mock_engine)
@@ -178,7 +178,7 @@ class TestCallbackPolicy:
 
     def test_on_agent_action_with_policy_passes(self, mock_engine, mock_policy):
         """When policy passes, on_agent_action should log normally."""
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         handler = langchain_audit_callback(mock_engine, policy=mock_policy)
 
@@ -194,7 +194,7 @@ class TestCallbackPolicy:
 
     def test_on_agent_action_blocked_by_policy(self, mock_engine, mock_blocking_policy):
         """When policy blocks, on_agent_action should raise PermissionError."""
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         handler = langchain_audit_callback(mock_engine, policy=mock_blocking_policy)
 
@@ -219,7 +219,7 @@ class TestCallbackGracefulDegradation:
         """langchain_audit_callback should raise ImportError when langchain-core is missing."""
         import sys
 
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         with patch.dict(
             "sys.modules",
@@ -232,7 +232,7 @@ class TestCallbackGracefulDegradation:
 
     def test_callback_uses_correct_session_id(self, mock_engine):
         """Session ID should be 12 chars and consistent within one callback."""
-        from agent_audit.integrations import langchain_audit_callback
+        from agent_seal.integrations import langchain_audit_callback
 
         handler = langchain_audit_callback(mock_engine)
         sid = handler.session_id
@@ -253,7 +253,7 @@ class TestAuditedAgent:
 
     def test_invoke_logs_request_and_response(self, mock_engine):
         """invoke() should log both request and response events."""
-        from agent_audit.integrations import AuditedAgent
+        from agent_seal.integrations import AuditedAgent
 
         def my_agent(input_text: str) -> str:
             return f"Processed: {input_text}"
@@ -271,7 +271,7 @@ class TestAuditedAgent:
 
     def test_invoke_with_error_logs_error(self, mock_engine):
         """When the agent function raises, error should be logged."""
-        from agent_audit.integrations import AuditedAgent
+        from agent_seal.integrations import AuditedAgent
 
         def broken_agent(input_text: str) -> str:
             raise RuntimeError("agent crashed")
@@ -292,7 +292,7 @@ class TestAuditedAgent:
 
     def test_invoke_with_policy_block(self, mock_engine, mock_blocking_policy):
         """When policy blocks, output should be replaced with block message."""
-        from agent_audit.integrations import AuditedAgent
+        from agent_seal.integrations import AuditedAgent
 
         def my_agent(input_text: str) -> str:
             return "dangerous output"

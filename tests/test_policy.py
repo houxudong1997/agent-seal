@@ -1,6 +1,6 @@
 """Tests for the policy engine (new YAML-based architecture)."""
 
-from agent_audit.policy.engine import PolicyEngine, Verdict
+from agent_seal.policy.engine import PolicyEngine, Verdict
 
 
 def test_block_rm_rf():

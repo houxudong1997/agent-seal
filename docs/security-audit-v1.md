@@ -1,4 +1,4 @@
-# agent-audit v1.0 — Phase 5.2 Security Audit Report
+# agent-seal v1.0 — Phase 5.2 Security Audit Report
 
 > **Document**: P5.2 Security Audit Report
 > **Date**: 2026-06-22
@@ -24,9 +24,9 @@
 
 ## 1. Executive Summary
 
-A full manual security audit of the agent-audit v1.0.0 codebase was conducted across
+A full manual security audit of the agent-seal v1.0.0 codebase was conducted across
 four critical security domains: encryption, authentication, input validation, and
-dependency vulnerabilities.  Every `.py` file in the `agent_audit/` source tree was
+dependency vulnerabilities.  Every `.py` file in the `agent_seal/` source tree was
 reviewed, with special attention to the `core/`, `server/`, and `server/routes/` modules.
 
 ### Overall Assessment: **CONDITIONAL PASS** — 4 HIGH, 14 MEDIUM, 8 LOW
@@ -85,7 +85,7 @@ the system is suitable for production deployment with standard monitoring.
 
 ### 3.1 Cryptographic Foundations
 
-agent-audit's cryptographic core is strong:
+agent-seal's cryptographic core is strong:
 
 | Primitive | Implementation | Status |
 |-----------|---------------|--------|
@@ -99,7 +99,7 @@ agent-audit's cryptographic core is strong:
 #### A-1: crypto.py — Ed25519 Signing
 
 ```
-File: agent_audit/core/crypto.py (243 lines)
+File: agent_seal/core/crypto.py (243 lines)
 ```
 
 **Strengths:**
@@ -120,7 +120,7 @@ File: agent_audit/core/crypto.py (243 lines)
 #### A-2: encrypted.py — AES-256-GCM Encrypted Storage
 
 ```
-File: agent_audit/core/encrypted.py (135 lines)
+File: agent_seal/core/encrypted.py (135 lines)
 ```
 
 **Strengths:**
@@ -141,7 +141,7 @@ File: agent_audit/core/encrypted.py (135 lines)
 #### A-3: evidence.py — Evidence Bundle Export
 
 ```
-File: agent_audit/evidence.py (232 lines)
+File: agent_seal/evidence.py (232 lines)
 ```
 
 **Strengths:**
@@ -161,7 +161,7 @@ File: agent_audit/evidence.py (232 lines)
 #### A-4: chain.py — Hash Chain Engine
 
 ```
-File: agent_audit/core/chain.py (191 lines)
+File: agent_seal/core/chain.py (191 lines)
 ```
 
 **Strengths:**
@@ -179,7 +179,7 @@ File: agent_audit/core/chain.py (191 lines)
 #### A-5: redact.py — PII Redaction
 
 ```
-File: agent_audit/core/redact.py (42 lines)
+File: agent_seal/core/redact.py (42 lines)
 ```
 
 **Findings:**
@@ -196,7 +196,7 @@ File: agent_audit/core/redact.py (42 lines)
 ### 4.1 API Key Authentication
 
 ```
-File: agent_audit/server/middlewares.py (221 lines)
+File: agent_seal/server/middlewares.py (221 lines)
 ```
 
 **Strengths:**
@@ -210,11 +210,11 @@ File: agent_audit/server/middlewares.py (221 lines)
 
 | ID | Severity | Finding | Location |
 |----|----------|---------|----------|
-| **B-1** | **🔴 HIGH** | **API keys stored in plain text. `AGENT_AUDIT_API_KEYS` is a comma-separated env var of raw keys. If `.env` leaks (misconfigured S3 bucket, CI log, Docker image layer), all API keys are exposed. Production should hash keys at rest.** | `config.py:115-117` |
+| **B-1** | **🔴 HIGH** | **API keys stored in plain text. `AGENT_SEAL_API_KEYS` is a comma-separated env var of raw keys. If `.env` leaks (misconfigured S3 bucket, CI log, Docker image layer), all API keys are exposed. Production should hash keys at rest.** | `config.py:115-117` |
 | B-2 | MEDIUM | No rate limiting — brute-force against API key endpoint has no throttle. An attacker can try unlimited keys per second. | `middlewares.py:159` |
 | B-3 | MEDIUM | No key rotation support — adding a new key and removing an old one requires config change + server restart. No dual-key transition period. | `config.py:115` |
 | B-4 | MEDIUM | `/api/v1/stats` and `/api/v1/events/stream` are public — leak internal state (event counts, session IDs) without authentication. Acceptable for dev but should be configurable in production. | `middlewares.py:142-150` |
-| B-5 | MEDIUM | `secret_key` fallback chain: `AGENT_AUDIT_SECRET_KEY → SECRET_KEY` (non-prefixed). In a multi-app environment this could accidentally share secrets across services. | `config.py:72-73` |
+| B-5 | MEDIUM | `secret_key` fallback chain: `AGENT_SEAL_SECRET_KEY → SECRET_KEY` (non-prefixed). In a multi-app environment this could accidentally share secrets across services. | `config.py:72-73` |
 | B-6 | LOW | `WWW-Authenticate: ApiKey` is non-standard (RFC 7235 doesn't define `ApiKey` scheme). Use `Bearer` for standards compliance. | `middlewares.py:179` |
 | B-7 | INFO | CORS defaults to empty origins (secure by default) — correct. | `config.py:121-124` |
 
@@ -371,11 +371,11 @@ in the version ranges specified by `requirements.txt`.
 
 | ID | Finding | Fix |
 |----|---------|-----|
-| A-3b | Plain sign_key in API body | Move to `AGENT_AUDIT_SIGNING_KEY` env var |
+| A-3b | Plain sign_key in API body | Move to `AGENT_SEAL_SIGNING_KEY` env var |
 | B-2 | No rate limiting | Add `slowapi` or Starlette `RateLimitMiddleware` (100 req/min per IP for auth endpoints) |
-| B-4 | Public /stats and /events/stream | Add `AGENT_AUDIT_PUBLIC_ENDPOINTS` config toggle |
+| B-4 | Public /stats and /events/stream | Add `AGENT_SEAL_PUBLIC_ENDPOINTS` config toggle |
 | C-3a–d | No input sanitization | Add Pydantic `Field(max_length=...)` and `regex` validators on all string inputs |
-| C-4a | PII not redacted by default | Auto-redact `input_snapshot`/`output_snapshot` when `AGENT_AUDIT_AUTO_REDACT=1` |
+| C-4a | PII not redacted by default | Auto-redact `input_snapshot`/`output_snapshot` when `AGENT_SEAL_AUTO_REDACT=1` |
 | D-1/D-2 | Version inconsistency | Align setup.py with requirements.txt; make requirements.txt canonical |
 | D-3 | No lock file | Add `requirements-lock.txt` with `pip freeze --hashes` |
 | D-4 | Missing psycopg2 in requirements.txt | Move `psycopg2-binary>=2.9` from dev to core requirements, or document as optional |
@@ -386,7 +386,7 @@ in the version ranges specified by `requirements.txt`.
 |----|---------|-----|
 | A-1a | No key rotation | Document key rotation procedure for Ed25519 and AES-256 keys |
 | A-2a | No encrypted store key rotation | Implement key version header in encrypted records |
-| B-3 | No dual-key transition | Support `AGENT_AUDIT_API_KEYS` and `AGENT_AUDIT_API_KEYS_PREVIOUS` for rotation |
+| B-3 | No dual-key transition | Support `AGENT_SEAL_API_KEYS` and `AGENT_SEAL_API_KEYS_PREVIOUS` for rotation |
 | A-5a | Regex redact bypass | Add `presidio-analyzer` or spaCy NER as optional enhancement |
 
 ---
@@ -395,7 +395,7 @@ in the version ranges specified by `requirements.txt`.
 
 ### 9.1 EU AI Act Article 12 (Record-Keeping)
 
-| Requirement | agent-audit Status | Notes |
+| Requirement | agent-seal Status | Notes |
 |-------------|-------------------|-------|
 | Automatic logging | ✅ Supported via LLM auto-tracing | Optional, off by default |
 | Technical safeguards against tampering | ✅ SHA-256 hash chains + Ed25519 signatures | Core feature |
@@ -429,22 +429,22 @@ in the version ranges specified by `requirements.txt`.
 All audited files with line counts:
 
 ```
-agent_audit/core/crypto.py          243 lines  — Ed25519 signing
-agent_audit/core/encrypted.py       135 lines  — AES-256-GCM encrypted store
-agent_audit/core/chain.py           191 lines  — SHA-256 hash chain engine
-agent_audit/core/redact.py           42 lines  — PII redaction
-agent_audit/evidence.py             232 lines  — Evidence bundle export
-agent_audit/config.py               196 lines  — Configuration system
-agent_audit/server/middlewares.py    221 lines  — Auth + CORS + GZip + Prometheus
-agent_audit/server/routes/events.py  261 lines  — Event CRUD + SSE
-agent_audit/server/routes/sessions.py 99 lines  — Session list/detail
-agent_audit/server/routes/llm.py     179 lines  — LLM tracing
-agent_audit/server/routes/compliance.py 78 lines — Compliance reports
-agent_audit/server/routes/evidence.py  85 lines — Evidence export endpoint
-agent_audit/server/routes/policy.py    90 lines — Policy evaluation
-agent_audit/server/routes/prompts.py  173 lines — Prompt versioning
-agent_audit/server/routes/admin.py    100 lines — Health/dashboard/metrics
-agent_audit/server/dependencies.py    207 lines — Shared infrastructure
+agent_seal/core/crypto.py          243 lines  — Ed25519 signing
+agent_seal/core/encrypted.py       135 lines  — AES-256-GCM encrypted store
+agent_seal/core/chain.py           191 lines  — SHA-256 hash chain engine
+agent_seal/core/redact.py           42 lines  — PII redaction
+agent_seal/evidence.py             232 lines  — Evidence bundle export
+agent_seal/config.py               196 lines  — Configuration system
+agent_seal/server/middlewares.py    221 lines  — Auth + CORS + GZip + Prometheus
+agent_seal/server/routes/events.py  261 lines  — Event CRUD + SSE
+agent_seal/server/routes/sessions.py 99 lines  — Session list/detail
+agent_seal/server/routes/llm.py     179 lines  — LLM tracing
+agent_seal/server/routes/compliance.py 78 lines — Compliance reports
+agent_seal/server/routes/evidence.py  85 lines — Evidence export endpoint
+agent_seal/server/routes/policy.py    90 lines — Policy evaluation
+agent_seal/server/routes/prompts.py  173 lines — Prompt versioning
+agent_seal/server/routes/admin.py    100 lines — Health/dashboard/metrics
+agent_seal/server/dependencies.py    207 lines — Shared infrastructure
 requirements.txt                       31 lines — Core dependencies
 requirements-dev.txt                   17 lines — Dev dependencies
 setup.py                               34 lines — Package definition

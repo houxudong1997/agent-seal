@@ -20,7 +20,7 @@ import pytest
 # Paths & helpers
 # ---------------------------------------------------------------------------
 
-TRACING_DIR = Path(__file__).resolve().parent.parent / "agent_audit" / "tracing"
+TRACING_DIR = Path(__file__).resolve().parent.parent / "agent_seal" / "tracing"
 
 TARGET_FILES = {
     "auto": TRACING_DIR / "auto.py",
@@ -30,10 +30,10 @@ TARGET_FILES = {
 }
 
 MODULE_MAP = {
-    "auto": "agent_audit.tracing.auto",
-    "opentelemetry": "agent_audit.tracing.opentelemetry",
-    "openai_instrumentor": "agent_audit.tracing.openai_instrumentor",
-    "anthropic": "agent_audit.tracing.anthropic",
+    "auto": "agent_seal.tracing.auto",
+    "opentelemetry": "agent_seal.tracing.opentelemetry",
+    "openai_instrumentor": "agent_seal.tracing.openai_instrumentor",
+    "anthropic": "agent_seal.tracing.anthropic",
 }
 
 AUDIT_ENGINE_FILES = {"auto", "opentelemetry", "openai_instrumentor", "anthropic"}

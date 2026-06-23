@@ -60,7 +60,7 @@ afterEach(() => {
 describe("App (integration)", () => {
   it("renders the dashboard title and version tag", async () => {
     render(App);
-    expect(screen.getByText("Agent Audit Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Agent Seal Dashboard")).toBeInTheDocument();
     expect(screen.getByText("v1.0.0")).toBeInTheDocument();
   });
 

@@ -1,14 +1,14 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="agent-audit",
+    name="agent-seal",
     version="1.1.0",
     description="Tamper-evident audit trail for AI agents — EU AI Act ready",
     author="Mr.H",
     license={"text": "MIT"},
     packages=find_packages(),
     include_package_data=True,
-    package_data={"agent_audit": ["py.typed"]},
+    package_data={"agent_seal": ["py.typed"]},
     install_requires=[
         "fastapi>=0.100",
         "uvicorn[standard]>=0.20",
@@ -29,7 +29,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "agent-audit=agent_audit.cli:main",
+            "agent-seal=agent_seal.cli:main",
         ],
     },
     python_requires=">=3.11",

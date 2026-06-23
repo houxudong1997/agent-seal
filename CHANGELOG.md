@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to agent-audit will be documented in this file.
+All notable changes to agent-seal will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Evidence export** — tamper-evident `.zip` bundles with SHA-256 verification for auditors.
 - **Prompt versioning** — Git-like prompt history with diff support, recording who, when, and why for every prompt change.
 - **Docker Compose** — 4-service production stack (nginx → API → PostgreSQL 15 + Redis) with health checks and named volumes.
-- **Multi-stage Docker build** — builder stage → production image, non-root `agentaudit` user.
+- **Multi-stage Docker build** — builder stage → production image, non-root `agentseal` user.
 - **Nginx reverse proxy** — TLS termination, static file serving for SPA assets, proxy_pass to API.
 - **`.env.example`** — complete environment variable reference with inline documentation.
 - **Slack webhook notifications** — audit alerts for policy blocks, integrity failures, error spikes.
@@ -40,16 +40,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Config namespace**: all environment variables now use `AGENT_AUDIT_` prefix. Legacy names still read as fallback.
+- **Config namespace**: all environment variables now use `AGENT_SEAL_` prefix. Legacy names still read as fallback.
 - **API versioning**: all v1 endpoints under `/api/v1/`. Legacy v0.1 endpoints preserved with redirects.
 - **API response format**: session endpoints now return rich summaries instead of raw ID lists.
 - **Unified store factory**: `create_store()` auto-detects backend from URI scheme (`postgresql://` → PG, `sqlite://` or `.db` → SQLite, directory → JSONL).
-- **Database URL config**: standardized `AGENT_AUDIT_DB_URL` across all backends, replacing old `AGENT_AUDIT_DIR` / `AGENT_AUDIT_URI`.
+- **Database URL config**: standardized `AGENT_SEAL_DB_URL` across all backends, replacing old `AGENT_SEAL_DIR` / `AGENT_SEAL_URI`.
 
 ### Deprecated
 
 - Legacy v0.1 API paths (`GET /sessions`, `GET /stats`, `POST /log`, `POST /verify`). Migrate to `/api/v1/` equivalents.
-- Legacy environment variable names (`AUDIT_DIR`, `DB_URL`, `API_KEYS`, `SECRET_KEY`, `LOG_LEVEL`). Migrate to `AGENT_AUDIT_` prefix.
+- Legacy environment variable names (`AUDIT_DIR`, `DB_URL`, `API_KEYS`, `SECRET_KEY`, `LOG_LEVEL`). Migrate to `AGENT_SEAL_` prefix.
 
-[1.1.0]: https://github.com/user/agent-audit/releases/tag/v1.1.0
-[1.0.0]: https://github.com/user/agent-audit/releases/tag/v1.0.0
+[1.1.0]: https://github.com/user/agent-seal/releases/tag/v1.1.0
+[1.0.0]: https://github.com/user/agent-seal/releases/tag/v1.0.0

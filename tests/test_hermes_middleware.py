@@ -1,5 +1,5 @@
 """
-Tests for Hermes middleware (agent_audit/server/hermes_middleware.py).
+Tests for Hermes middleware (agent_seal/server/hermes_middleware.py).
 
 Coverage:
   - Middleware intercepts /api/* paths and logs audit events
@@ -67,7 +67,7 @@ class TestHermesMiddlewareBasic:
 
     def test_middleware_logs_api_request(self, app, mock_engine):
         """API requests should be logged to the audit engine."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         app.add_middleware(HermesAuditMiddleware, engine=mock_engine, agent_id="test-agent")
 
@@ -82,7 +82,7 @@ class TestHermesMiddlewareBasic:
 
     def test_middleware_logs_method_and_path(self, app, mock_engine):
         """Middleware should record HTTP method and path."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         app.add_middleware(HermesAuditMiddleware, engine=mock_engine, agent_id="test-agent")
 
@@ -95,7 +95,7 @@ class TestHermesMiddlewareBasic:
 
     def test_middleware_records_status_code(self, app, mock_engine):
         """Middleware should record the response status code."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         app.add_middleware(HermesAuditMiddleware, engine=mock_engine, agent_id="test-agent")
 
@@ -107,7 +107,7 @@ class TestHermesMiddlewareBasic:
 
     def test_middleware_records_duration(self, app, mock_engine):
         """Middleware should record request duration."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         app.add_middleware(HermesAuditMiddleware, engine=mock_engine, agent_id="test-agent")
 
@@ -120,7 +120,7 @@ class TestHermesMiddlewareBasic:
 
     def test_middleware_logs_post_requests(self, app, mock_engine):
         """POST requests should also be logged."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         app.add_middleware(HermesAuditMiddleware, engine=mock_engine, agent_id="test-agent")
 
@@ -140,7 +140,7 @@ class TestHermesMiddlewareBypass:
 
     def test_non_api_route_not_logged(self, app, mock_engine):
         """Routes not starting with /api should not be logged."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         app.add_middleware(HermesAuditMiddleware, engine=mock_engine, agent_id="test-agent")
 
@@ -179,7 +179,7 @@ class TestHermesMiddlewareLLM:
 
     def test_chat_completions_is_llm_request(self, llm_app, mock_engine):
         """Chat completion endpoints should have event_type=llm_request."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         llm_app.add_middleware(
             HermesAuditMiddleware, engine=mock_engine, agent_id="test-agent"
@@ -194,7 +194,7 @@ class TestHermesMiddlewareLLM:
 
     def test_openai_compat_is_llm_request(self, llm_app, mock_engine):
         """OpenAI-compatible v1/completions should be detected as LLM."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         llm_app.add_middleware(
             HermesAuditMiddleware, engine=mock_engine, agent_id="test-agent"
@@ -208,7 +208,7 @@ class TestHermesMiddlewareLLM:
 
     def test_anthropic_messages_is_llm_request(self, llm_app, mock_engine):
         """Anthropic /v1/messages endpoint should be detected as LLM."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         llm_app.add_middleware(
             HermesAuditMiddleware, engine=mock_engine, agent_id="test-agent"
@@ -231,7 +231,7 @@ class TestHermesMiddlewareAgentID:
 
     def test_agent_id_from_env_var(self, app):
         """agent_id should be read from HERMES_AGENT_ID env var."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         with patch.dict(os.environ, {"HERMES_AGENT_ID": "env-agent"}):
             mock_eng = MagicMock()
@@ -243,13 +243,13 @@ class TestHermesMiddlewareAgentID:
             assert mock_eng.log.call_args[1]["agent_id"] == "env-agent"
 
     def test_agent_id_env_priority(self, app):
-        """AGENT_AUDIT_HERMES_AGENT_ID should take priority over HERMES_AGENT_ID."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        """AGENT_SEAL_HERMES_AGENT_ID should take priority over HERMES_AGENT_ID."""
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         with patch.dict(
             os.environ,
             {
-                "AGENT_AUDIT_HERMES_AGENT_ID": "explicit-agent",
+                "AGENT_SEAL_HERMES_AGENT_ID": "explicit-agent",
                 "HERMES_AGENT_ID": "fallback-agent",
             },
         ):
@@ -263,7 +263,7 @@ class TestHermesMiddlewareAgentID:
 
     def test_unknown_agent_fallback(self, app):
         """When no env var is set, agent_id should fall back to 'unknown-hermes-agent'."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         with patch.dict(os.environ, {}, clear=True):
             mock_eng = MagicMock()
@@ -276,7 +276,7 @@ class TestHermesMiddlewareAgentID:
 
     def test_explicit_agent_id_overrides_env(self, app):
         """Explicit agent_id kwarg should override any env var."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         with patch.dict(os.environ, {"HERMES_AGENT_ID": "env-agent"}):
             mock_eng = MagicMock()
@@ -300,7 +300,7 @@ class TestHermesMiddlewareDegradation:
 
     def test_no_engine_does_not_crash(self, app):
         """Without an engine, the middleware should not crash."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         app.add_middleware(HermesAuditMiddleware, engine=None)
 
@@ -310,7 +310,7 @@ class TestHermesMiddlewareDegradation:
 
     def test_engine_failure_does_not_crash(self, app):
         """If engine.log() raises, the request should still complete."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         broken_engine = MagicMock()
         broken_engine.log.side_effect = RuntimeError("engine down")
@@ -323,7 +323,7 @@ class TestHermesMiddlewareDegradation:
 
     def test_unreadable_body_does_not_crash(self, app, mock_engine):
         """If request body cannot be read, the middleware should not crash."""
-        from agent_audit.server.hermes_middleware import HermesAuditMiddleware
+        from agent_seal.server.hermes_middleware import HermesAuditMiddleware
 
         app.add_middleware(HermesAuditMiddleware, engine=mock_engine)
 

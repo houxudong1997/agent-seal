@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-60-second demo of agent-audit capabilities.
+60-second demo of agent-seal capabilities.
 
 Shows: audit logging → integrity verification → tamper detection →
        prompt versioning → policy enforcement → evidence export
@@ -17,12 +17,12 @@ def demo():
 
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-    from agent_audit.evidence import EvidenceExporter
-    from agent_audit.policy import PolicyEngine, Verdict
-    from agent_audit.prompt_version import PromptRegistry
-    from agent_audit.trail import AuditIntegrityError, AuditTrail
+    from agent_seal.evidence import EvidenceExporter
+    from agent_seal.policy import PolicyEngine, Verdict
+    from agent_seal.prompt_version import PromptRegistry
+    from agent_seal.trail import AuditIntegrityError, AuditTrail
 
-    from agent_audit.engine import AuditEngine
+    from agent_seal.engine import AuditEngine
 
     # ── Setup ──
     tmp = tempfile.mkdtemp()
@@ -31,7 +31,7 @@ def demo():
     engine = trail._engine  # For evidence exporter (AuditTrail is a compatibility wrapper)
     policy = PolicyEngine()
     print("=" * 55)
-    print("  agent-audit — 60-second demo")
+    print("  agent-seal — 60-second demo")
     print("=" * 55)
 
     # ── 1. Log agent activity ──

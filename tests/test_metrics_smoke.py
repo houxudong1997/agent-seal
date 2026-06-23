@@ -1,21 +1,21 @@
 """Verify the server app imports cleanly with new metrics."""
 import sys
 import os
-sys.path.insert(0, r"F:\workstation\projects\agent-audit")
+sys.path.insert(0, r"F:\workstation\projects\agent-seal")
 
 # Clear cached modules
 for mod in list(sys.modules):
-    if 'agent_audit' in mod:
+    if 'agent_seal' in mod:
         del sys.modules[mod]
     if 'prometheus_fastapi_instrumentator' in mod:
         del sys.modules[mod]
 
 # Test that the full server module imports without errors
 print("Testing imports...")
-from agent_audit.server.metrics import generate, inc, set_gauge, record_event, shutdown
+from agent_seal.server.metrics import generate, inc, set_gauge, record_event, shutdown
 print("  metrics.py: OK")
 
-from agent_audit.server.middlewares import setup_prometheus
+from agent_seal.server.middlewares import setup_prometheus
 print("  middlewares.py setup_prometheus: OK")
 
 # Test the generate function returns valid Prometheus text

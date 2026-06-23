@@ -1,5 +1,5 @@
 """
-E2E, cross-storage, and security tests for agent-audit v1.0.0.
+E2E, cross-storage, and security tests for agent-seal v1.0.0.
 
 Covers:
   - Cross-storage: JSONL + SQLite
@@ -15,19 +15,19 @@ from unittest.mock import patch, MagicMock, PropertyMock
 
 import pytest
 
-from agent_audit.engine import AuditEngine
-from agent_audit.evidence import EvidenceExporter, EvidenceBundle
-from agent_audit.trail import AuditTrail
-from agent_audit.prompt_version import PromptRegistry
-from agent_audit.core.encrypted import (
+from agent_seal.engine import AuditEngine
+from agent_seal.evidence import EvidenceExporter, EvidenceBundle
+from agent_seal.trail import AuditTrail
+from agent_seal.prompt_version import PromptRegistry
+from agent_seal.core.encrypted import (
     EncryptedStore,
     generate_master_key,
     derive_key,
     save_key,
     load_key,
 )
-from agent_audit.policy.engine import PolicyEngine
-from agent_audit.notify import Alert, ConsoleNotifier
+from agent_seal.policy.engine import PolicyEngine
+from agent_seal.notify import Alert, ConsoleNotifier
 
 
 # ═══════════════════════ CROSS-STORAGE: JSONL ═══════════════════════

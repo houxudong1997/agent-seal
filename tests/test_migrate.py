@@ -20,7 +20,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agent_audit.migrate import (
+from agent_seal.migrate import (
     _batch_insert_pg,
     _ensure_pg_schema,
     _ensure_psycopg2,
@@ -1115,7 +1115,7 @@ class TestEdgeCases:
 
     def test_jsonl_to_sqlite_handles_missing_dir(self):
         """jsonl_to_sqlite should raise if audit.jsonl is missing."""
-        from agent_audit.migrate import jsonl_to_sqlite
+        from agent_seal.migrate import jsonl_to_sqlite
 
         with tempfile.TemporaryDirectory() as d:
             empty = Path(d)

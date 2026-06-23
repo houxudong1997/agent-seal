@@ -1,4 +1,4 @@
-# ── Agent Audit — .gitignore ──
+# ── agent-seal — .gitignore ──
 
 # SSL/TLS certificates (NEVER commit private keys)
 nginx/ssl/*.pem

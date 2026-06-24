@@ -26,10 +26,10 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 ```bash
 certbot certonly --webroot -w /var/www/certbot \
   -d your-domain.com \
-  --cert-name agent-audit
+  --cert-name agent-seal
 # Then copy:
-#   cp /etc/letsencrypt/live/agent-audit/fullchain.pem nginx/ssl/cert.pem
-#   cp /etc/letsencrypt/live/agent-audit/privkey.pem   nginx/ssl/key.pem
+#   cp /etc/letsencrypt/live/agent-seal/fullchain.pem nginx/ssl/cert.pem
+#   cp /etc/letsencrypt/live/agent-seal/privkey.pem   nginx/ssl/key.pem
 ```
 
 ## Enabling HTTPS in nginx

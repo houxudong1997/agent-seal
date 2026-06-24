@@ -2,7 +2,7 @@ import requests, json, time, base64, io, os
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 
 COMFY = 'http://127.0.0.1:8188'
-OUTPUT = 'F:/workstation/projects/agent-audit/screenshots/banner.png'
+OUTPUT = 'F:/workstation/projects/agent-seal/screenshots/banner.png'
 
 # ── Step 1: Generate background with ComfyUI SD1.5 + hires fix ──
 # Using majicmixRealistic_v7 which is lighter (SD1.5 ~2GB) and faster
@@ -181,7 +181,7 @@ accent_color = (245, 158, 11, 230)  # #F59E0B amber
 draw.rectangle([(80, 0), (350, 4)], fill=accent_color)
 
 # Draw title - centered
-title_text = "agent-audit"
+title_text = "agent-seal"
 bbox = draw.textbbox((0, 0), title_text, font=title_font)
 tw = bbox[2] - bbox[0]
 th = bbox[3] - bbox[1]

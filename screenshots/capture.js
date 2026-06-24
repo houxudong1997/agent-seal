@@ -11,7 +11,7 @@ const { chromium } = require('playwright');
   await page.waitForTimeout(1500);
   
   await page.screenshot({
-    path: 'F:\\workstation\\projects\\agent-audit\\screenshots\\after.png',
+    path: 'F:\\workstation\\projects\\agent-seal\\screenshots\\after.png',
     fullPage: true
   });
   

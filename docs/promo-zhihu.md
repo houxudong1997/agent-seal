@@ -40,7 +40,7 @@ agent-seal serve
 # Dashboard 打开 http://localhost:8081，所有 LLM 调用自动出现
 ```
 
-这是怎么做到的？`sitecustomize.py` 全局 Hook 在 Python 解释器启动时自动注入，拦截所有基于 `httpx` 的 LLM API 调用（OpenAI、Anthropic，以及任何兼容 OpenAI API 格式的服务）。不需要 `import`，不需要装饰器，不需要改 `requirements.txt`。
+这是怎么做到的？设置环境变量 `AGENT_SEAL_AUTO_TRACE=1`，agent-seal 自动 monkey-patch OpenAI 和 Anthropic SDK，拦截所有 LLM API 调用（以及任何兼容 OpenAI API 格式的服务）。不需要 `import`，不需要装饰器，不需要改 `requirements.txt`。
 
 你的 FastAPI 应用、Celery Worker、Jupyter Notebook、甚至命令行脚本——全自动追踪。合规审计从此不需要跟开发打架。
 
@@ -133,7 +133,7 @@ agent-seal 的核心安全设计：
 
 监控方面，我们提供了：
 
-- **Prometheus Metrics**：`GET /metrics` 导出 `audit_events_total`、`audit_sessions_active`、`audit_policy_denials_total` 等指标
+- **Prometheus Metrics**：`GET /metrics` 导出 `audit_events_total`、`audit_sessions_active`、`audit_policy_decisions_total` 等指标
 - **SPA Dashboard**：单页应用控制台，SSE 实时推送新事件（无需刷新页面）。事件详情可展开，支持模型/延迟列、智能预览、二进制输出过滤
 - **Slack + 邮件告警**：策略阻止、完整性失败、错误激增时自动通知
 
@@ -175,7 +175,7 @@ curl http://localhost/health
 
 ## 代码质量
 
-- **172 个测试用例**，全部 green（pytest）
+- **214 个测试用例**，全部 green（pytest）
 - ruff 零警告，mypy 类型检查通过
 - Python 3.11 / 3.12 / 3.13 兼容
 - FastAPI 自动生成 OpenAPI 文档（`/docs`）
@@ -187,7 +187,7 @@ curl http://localhost/health
 
 做这个项目的初衷很简单：合规不应该是一件痛苦的事。如果你已经在构建有用的 AI Agent，审计追踪不应该是额外的负担——它应该是自动化的、透明的、甚至在你忘记它存在的时候仍然默默工作。
 
-agent-seal 还很年轻（刚发布 v1.1），但核心的哈希链、签名、加密、策略引擎、合规报告都已经是生产可用的。我们自己在 Hermes Agent 框架的工作站里已经在用，172 条测试覆盖了核心路径。
+agent-seal 还很年轻（刚发布 v1.1），但核心的哈希链、签名、加密、策略引擎、合规报告都已经是生产可用的。我们自己在 Hermes Agent 框架的工作站里已经在用，214 条测试覆盖了核心路径。
 
 如果你也在为 EU AI Act 的合规要求头疼，不妨试试：
 

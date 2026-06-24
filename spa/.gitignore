@@ -4,4 +4,4 @@ dist/
 *.local
 
 # Build output (committed separately by the build process)
-# The built SPA is placed in ../agent_audit/server/static/ by vite build
+# The built SPA is placed in ../agent_seal/server/static/ by vite build

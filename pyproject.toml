@@ -3,12 +3,11 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-seal"
+name = "agent-seal-lite"
 version = "1.1.0"
 description = "Tamper-evident audit trail for AI agents — EU AI Act ready"
 authors = [{ name = "Mr.H" }]
-license = "MIT"
-license-files = ["LICENSE"]
+license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [

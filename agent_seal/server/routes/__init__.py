@@ -25,6 +25,7 @@ from .evidence import router as evidence_router
 from .llm import router as llm_router
 from .policy import router as policy_router
 from .prompts import router as prompts_router
+from .proxy import router as proxy_router
 from .sessions import legacy_router as sessions_legacy_router
 from .sessions import router as sessions_router
 
@@ -38,6 +39,7 @@ __all__ = [
     "llm_router",
     "policy_router",
     "prompts_router",
+    "proxy_router",
     "sessions_legacy_router",
     "sessions_router",
 ]

@@ -79,7 +79,7 @@ Claims of "tamper-proof" need to be verifiable, not aspirational. Here's the cry
 - **Evidence Bundles**: One-command `.zip` export with SHA-256 verification — hand it to an auditor, they verify independently
 - **EU AI Act Reports**: `agent-seal report <agent>` generates Article 12 compliance report
 - **Prompt Versioning**: Git-like prompt history with diffs — tracks who changed what, when, and why
-- **Prometheus Metrics**: `GET /metrics` with `audit_events_total`, `audit_sessions_active`, `audit_policy_denials_total`
+- **Prometheus Metrics**: `GET /metrics` with `audit_events_total`, `audit_sessions_active`, `audit_policy_decisions_total`
 - **Slack + Email Alerts**: Policy blocks, integrity failures, error spikes
 - **SPA Dashboard**: Real-time SSE event stream, expandable details, model/latency columns
 
@@ -104,7 +104,7 @@ docker compose up -d
 
 ## Code quality
 
-- 172 tests, all green (pytest)
+- 214 tests, all green (pytest)
 - ruff zero warnings, mypy clean
 - Python 3.11 / 3.12 / 3.13
 - FastAPI auto-generated OpenAPI docs

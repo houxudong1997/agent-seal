@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const path = require('path');
 
 const DASHBOARD_URL = 'http://127.0.0.1:8081';
-const SCREENSHOTS_DIR = 'F:\\workstation\\projects\\agent-audit\\screenshots';
+const SCREENSHOTS_DIR = 'F:\\workstation\\projects\\agent-seal\\screenshots';
 
 (async () => {
   const browser = await chromium.launch({

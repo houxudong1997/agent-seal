@@ -165,7 +165,7 @@ class TestDefaults:
 # ═══════════════════════════════════════════════════════════════════
 
 
-class TestAgentAuditEnvOverride:
+class TestAgentSealEnvOverride:
     """Setting AGENT_SEAL_* env vars must override defaults."""
 
     def test_db_url(self):

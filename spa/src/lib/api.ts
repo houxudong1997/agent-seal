@@ -1,4 +1,4 @@
-// API client for agent-audit REST API v1
+// API client for agent-seal REST API v1
 // All fetches are relative — works behind the same origin or Vite proxy.
 
 export interface StatsResponse {

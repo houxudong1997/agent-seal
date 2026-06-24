@@ -4,7 +4,7 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 export default defineConfig({
   plugins: [svelte()],
   build: {
-    outDir: "../agent_audit/server/static",
+    outDir: "../agent_seal/server/static",
     emptyOutDir: true,
     assetsDir: "assets",
   },

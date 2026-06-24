@@ -37,6 +37,7 @@ from .routes import (
     llm_router,
     policy_router,
     prompts_router,
+    proxy_router,
     sessions_legacy_router,
     sessions_router,
 )
@@ -69,6 +70,7 @@ app.include_router(policy_router)
 app.include_router(evidence_router)
 app.include_router(compliance_router)
 app.include_router(llm_router)
+app.include_router(proxy_router)
 
 # Legacy compat routers (unprefixed, thin wrappers around v1)
 app.include_router(events_legacy_router)

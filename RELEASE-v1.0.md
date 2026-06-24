@@ -136,7 +136,7 @@ v1.0 returns rich session summaries. v0.1 returns raw ID list.
 
 ```bash
 # 1. Update package
-pip install --upgrade agent-seal
+pip install --upgrade agent-seal-lite
 
 # 2. Update .env (add AGENT_SEAL_ prefix)
 #    Legacy vars still work, but we recommend migrating:

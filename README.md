@@ -37,7 +37,7 @@ Install agent-seal and start the server. Every Python process on the machine is 
 安装 agent-seal 并启动服务。机器上的每个 Python 进程都会被自动追踪——无需任何代码变更。
 
 ```bash
-pip install agent-seal
+pip install agent-seal-lite
 agent-seal server
 # Dashboard at http://localhost:8081 — all LLM calls appear automatically
 # 控制台地址：http://localhost:8081 — 所有 LLM 调用自动出现
@@ -167,19 +167,19 @@ Native support for the [Hermes Agent](https://hermes-agent.nousresearch.com/docs
 ## Installation / 安装
 
 ```bash
-pip install agent-seal
+pip install agent-seal-lite
 ```
 
 With PostgreSQL support / 带 PostgreSQL 支持：
 
 ```bash
-pip install agent-seal[postgresql]
+pip install agent-seal-lite[postgresql]
 ```
 
 Or everything / 或安装全部：
 
 ```bash
-pip install agent-seal[all]
+pip install agent-seal-lite[all]
 ```
 
 ### From source / 从源码安装

@@ -376,7 +376,7 @@ without modifying a single line of application code.
 ### Zero-Change Upgrade
 
 ```bash
-pip install --upgrade agent-seal
+pip install --upgrade agent-seal-lite
 agent-seal serve    # Works exactly as before — JSONL or SQLite auto-detected
 ```
 

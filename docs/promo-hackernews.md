@@ -19,7 +19,7 @@ So I built one. MIT license, Python 3.11+, `pip install` and go.
 No code changes. Install, start the server, and every Python process on the machine is automatically traced:
 
 ```bash
-pip install agent-seal
+pip install agent-seal-lite
 agent-seal serve
 # Dashboard at http://localhost:8081 — all LLM calls auto-appear
 ```

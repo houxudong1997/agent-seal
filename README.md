@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.1.0-blue)](https://pypi.org/project/agent-seal/)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue)](https://pypi.org/project/agent-seal-lite/)
 
 agent-seal records every decision, tool call, and model request an AI agent makes into an immutable, SHA-256 hash-chained log. Each event is cryptographically linked to the previous one — tamper with a single byte and the entire chain breaks, detected instantly on verification. Designed for **EU AI Act Article 12** (record-keeping, effective August 2026), SOC 2, and HIPAA audit requirements.
 
